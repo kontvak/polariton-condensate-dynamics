@@ -324,13 +324,15 @@ def make_figures(config, *, data_dir, output_dir,
 def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                          gaussian_threshold=None, ring_threshold=None,
                          convergence=None, domain_comparisons=None,
-                         validation_report=None):
+                         final_state_checks=None, validation_report=None):
     """Build a factual PASS/WARN/FAIL/NOT_TESTED table from saved results."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     rows = []
     times = []
     domain_comparisons = domain_comparisons or {}
+    if final_state_checks is not None and not isinstance(final_state_checks, dict):
+        final_state_checks = json.loads(Path(final_state_checks).read_text())
     if validation_report is None:
         rows.append(("0D и точные случаи FFT", "NOT_TESTED", "отчёт не указан"))
     else:
@@ -420,13 +422,35 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                      f"{data.get('status', 'NOT_TESTED')}, "
                      f"t={data.get('time_ps', '?')} пс, "
                      f"{data.get('reference_stationarity_status', 'статус не указан')}"))
-        rows.append(("Сходимость конечного режима",
+        rows.append(("Полная серия сходимости конечного режима",
                      data.get("final_state_assessment", "NOT_TESTED"),
-                     "проверяется на установившемся состоянии"))
+                     "три сетки и три шага на установившемся состоянии"))
         seen = {run_id for run_id, _time_ps, _wall, _state in times}
         for path in data.get("cases", {}).values():
             run = _run(path)
             if run["path"].name not in seen and run["summary"] is not None:
+                summary = run["summary"]
+                times.append((run["path"].name, summary["time_ps"],
+                              summary["elapsed_wall_s"], summary["run_status"]))
+                seen.add(run["path"].name)
+    for name, comparison in (final_state_checks or {}).items():
+        if comparison.get("status") != "COMPARED":
+            rows.append(("Пятно: " + name, "NOT_TESTED", "сравнение не завершено"))
+            continue
+        reference = _run(comparison["reference"])
+        candidate = _run(comparison["candidate"])
+        settled = all(run["summary"]["stationarity"]["stationarity_status"]
+                      == "STATIONARY_MODE" for run in (reference, candidate))
+        nc_error = comparison["NC_relative"]
+        density_error = comparison["core_density_map_relative"]
+        rows.append(("Пятно: " + name,
+                     "PASS" if settled and nc_error < 0.005 and density_error < 0.01
+                     else "WARN",
+                     f"t={candidate['summary']['time_ps']:g} пс, "
+                     f"ΔNC={nc_error:.3g}, ΔnC(core)={density_error:.3g}"))
+        seen = {run_id for run_id, _time_ps, _wall, _state in times}
+        for run in (reference, candidate):
+            if run["path"].name not in seen:
                 summary = run["summary"]
                 times.append((run["path"].name, summary["time_ps"],
                               summary["elapsed_wall_s"], summary["run_status"]))
