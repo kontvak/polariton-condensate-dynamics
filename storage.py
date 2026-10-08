@@ -238,9 +238,9 @@ def create_run(config, root=RESULTS_DIR):
                           config["save"]["snapshot_every_ps"])+1
     checkpoints = math.ceil(config["time"]["t_final_ps"] /
                             config["save"]["checkpoint_every_ps"])+1
-    # Conservative planning estimate: RK4/FFT temporaries and one full
-    # stationarity window in RAM; uncompressed NPZ arrays on disk.
-    memory_estimate = cells*(16*20+8*8+24*(samples+1))
+    # Planning estimate: RK4/FFT temporaries, one stationarity window,
+    # and process/library overhead; uncompressed NPZ arrays on disk.
+    memory_estimate = 256*2**20+cells*(16*20+8*8+24*(samples+1))
     data_estimate = cells*(24*snapshots+24*(samples+3)*checkpoints)
     _write_json(path/"run_metadata.json", {
         "run_id": run_id, "utc_created": datetime.now(timezone.utc).isoformat(),
@@ -261,7 +261,7 @@ def create_run(config, root=RESULTS_DIR):
             "working_memory_bytes": memory_estimate,
             "output_bytes": data_estimate,
             "disk_free_bytes_at_start": shutil.disk_usage(root).free,
-            "note": "Conservative uncompressed-array estimate"},
+            "note": "Approximate uncompressed-array estimate with process overhead"},
         "numerical_boundary": {
             "fft_boundary": "periodic",
             "absorbing_layer": config["space"]["absorbing_layer"],

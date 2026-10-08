@@ -275,12 +275,21 @@ def _convergence_figure(source, out):
             ax.semilogy(x, [max(r[key], 1e-15) for r in comparisons],
                         "o-", label=label)
     ax.axhline(0.005, color="k", ls="--", lw=1, label="0.5% ориентир")
-    labels = [r["comparison"].replace("_vs_", " → ").replace("_", "\n")
-              for r in comparisons]
+    def comparison_label(name):
+        if name.startswith("grid_"):
+            return "сетка\n"+name.removeprefix("grid_").replace("_vs_", " → ")
+        if name.startswith("dt_"):
+            return "Δt, пс\n"+name.removeprefix("dt_").replace("_vs_", " → ")
+        return "размер\nобласти"
+    labels = [comparison_label(r["comparison"]) for r in comparisons]
     ax.set_xticks(x, labels, rotation=15, ha="right")
+    mode = data.get("reference_stationarity_status", "NOT_TESTED")
+    mode_label = ("установившийся режим" if mode == "STATIONARY_MODE" else
+                  "переходный режим" if mode == "DYNAMIC_OR_UNSETTLED" else mode)
+    time_label = (f"{data['time_ps']:g}" if isinstance(data.get("time_ps"),
+                   (int, float)) else "?")
     ax.set(xlabel="Сетка / шаг времени / область", ylabel="Относительное отличие",
-           title=f"Сходимость при t={data.get('time_ps', '?')} пс; "
-                 f"{data.get('reference_stationarity_status', 'статус не указан')}")
+           title=f"Сходимость при t={time_label} пс ({mode_label})")
     ax.legend()
     return _save(fig, out, "F7_convergence")
 
