@@ -717,6 +717,7 @@ def assess_threshold_nonlinear(config, threshold, below_run, above_run):
     upper = runs["above"]["summary"]
     above_edge = upper["spatial_diagnostics"].get("edge_mass_fraction")
     above_edge_peak = upper["spatial_diagnostics"].get("edge_peak_ratio")
+    above_high_k = upper["spatial_diagnostics"].get("high_k_fraction")
     # A changing condensate can still be long lived. Check that its signal
     # remains resolved throughout the final stationarity window; the linear
     # bracket, rather than a brightness cutoff, defines the threshold.
@@ -748,8 +749,10 @@ def assess_threshold_nonlinear(config, threshold, below_run, above_run):
     quality_pass = (
         above_edge is not None
         and above_edge_peak is not None
+        and above_high_k is not None
         and above_edge <= config["checks"]["edge_mass_warn"]
         and above_edge_peak <= config["checks"]["edge_peak_warn"]
+        and above_high_k <= config["checks"]["high_k_warn"]
         and upper["balance_relative_residual"] <= config["checks"]["balance_warn_rel"])
     status = "SUPPORTED" if (
         lower["run_status"] == "RUN_COMPLETED"
@@ -771,6 +774,7 @@ def assess_threshold_nonlinear(config, threshold, below_run, above_run):
               "above_NC": upper["observables"]["NC"],
               "above_edge_mass_fraction": above_edge,
               "above_edge_peak_ratio": above_edge_peak,
+              "above_high_k_fraction": above_high_k,
               "above_persistence": persistence,
               "above_balance_relative_residual": upper["balance_relative_residual"]}
     if threshold.get("run_dir"):

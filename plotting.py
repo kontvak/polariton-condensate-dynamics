@@ -314,16 +314,26 @@ def make_figures(config, *, data_dir, output_dir,
 
 def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                          gaussian_threshold=None, ring_threshold=None,
-                         convergence=None, domain_comparisons=None):
+                         convergence=None, domain_comparisons=None,
+                         validation_report=None):
     """Build a factual PASS/WARN/FAIL/NOT_TESTED table from saved results."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     rows = []
     times = []
     domain_comparisons = domain_comparisons or {}
+    if validation_report is None:
+        rows.append(("0D и точные случаи FFT", "NOT_TESTED", "отчёт не указан"))
+    else:
+        data = (validation_report if isinstance(validation_report, dict) else
+                json.loads(Path(validation_report).read_text()))
+        rows.append(("0D и точные случаи FFT",
+                     "PASS" if data.get("PASS") else "FAIL",
+                     f"0D/2D={data.get('uniform_2d_vs_independent_0d_max_abs_error', float('nan')):.3g}, "
+                     f"Parseval={data.get('parseval_relative_error', float('nan')):.3g}"))
     for label, source in (("Пятно", gaussian_run), ("Кольцо", ring_run)):
         if source is None:
-            for check in ("завершение", "стационарность", "баланс", "граница"):
+            for check in ("завершение", "стационарность", "баланс", "граница", "высокие k"):
                 rows.append((label+": "+check, "NOT_TESTED", "прогон не указан"))
             continue
         run = _run(source)
@@ -350,6 +360,11 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                      edge_peak <= checks["edge_peak_warn"] else "WARN",
                      "n/a" if edge is None or edge_peak is None else
                      f"mass={edge:.3g}, peak={edge_peak:.3g}"))
+        high_k = summary["spatial_diagnostics"].get("high_k_fraction")
+        rows.append((label+": высокие k",
+                     "NOT_TESTED" if high_k is None else
+                     "PASS" if high_k <= checks["high_k_warn"] else "WARN",
+                     "n/a" if high_k is None else f"{high_k:.3g}"))
         comparison = domain_comparisons.get(label)
         rows.append((label+": размер области",
                      "NOT_TESTED" if comparison is None else
@@ -391,6 +406,14 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
         rows.append(("Сходимость конечного режима",
                      data.get("final_state_assessment", "NOT_TESTED"),
                      "проверяется на установившемся состоянии"))
+        seen = {run_id for run_id, _time_ps, _wall, _state in times}
+        for path in data.get("cases", {}).values():
+            run = _run(path)
+            if run["path"].name not in seen and run["summary"] is not None:
+                summary = run["summary"]
+                times.append((run["path"].name, summary["time_ps"],
+                              summary["elapsed_wall_s"], summary["run_status"]))
+                seen.add(run["path"].name)
     lines = ["# Проверки проекта", "",
              "| Проверка | Статус | Фактическое значение |", "|---|---|---|"]
     lines.extend(f"| {check} | {state} | {value} |" for check, state, value in rows)
