@@ -403,6 +403,14 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                      "PASS" if nonlinear_state == "SUPPORTED" else
                      "NOT_TESTED" if nonlinear_state == "NOT_TESTED" else "WARN",
                      nonlinear_state))
+        persistence = nonlinear.get("above_persistence", {})
+        persisted = persistence.get("status", "NOT_TESTED")
+        rows.append((label+": долгоживущий сигнал",
+                     "PASS" if persisted == "PERSISTENT" else
+                     "NOT_TESTED" if persisted == "NOT_TESTED" else "WARN",
+                     "n/a" if persistence.get("minimum_NC") is None else
+                     f"min NC={persistence['minimum_NC']:.3g} за "
+                     f"{persistence['window_ps']:g} пс"))
     if convergence is None:
         rows.append(("Сходимость", "NOT_TESTED", "серия не указана"))
     else:
