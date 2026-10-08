@@ -61,7 +61,11 @@ def test_checkpoint_resume_matches_uninterrupted(tmp_path):
         np.testing.assert_allclose(a["psi"], b["psi"], atol=1e-11, rtol=1e-11)
         np.testing.assert_allclose(a["nR"], b["nR"], atol=1e-11, rtol=1e-11)
     assert resumed["summary"]["balance_relative_residual"] < 1e-6
-    assert load_run(resumed["path"])["metadata"]["config_sha256"]
+    metadata = load_run(resumed["path"])["metadata"]
+    assert metadata["config_sha256"]
+    assert metadata["resource_estimate"]["working_memory_bytes"] > 0
+    assert metadata["resource_estimate"]["output_bytes"] > 0
+    assert metadata["grid"]["kx_nyquist_um_inv"] > 0
     assert "RUN_RESUMED" in (resumed["path"]/"run_events.jsonl").read_text()
 
 
@@ -73,6 +77,7 @@ def test_convergence_workflow_compares_saved_fields(tmp_path):
         time_steps=(0.05, 0.025, 0.0125),
         domains=((32.0, 32), (48.0, 48)), result_root=tmp_path)
     assert report["status"] == "COMPLETED"
+    assert report["final_state_assessment"] == "NOT_TESTED"
     assert len(report["comparisons"]) == 5
     assert all(np.isfinite(item["density_map_relative"])
                for item in report["comparisons"])

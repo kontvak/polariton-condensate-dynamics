@@ -5,10 +5,13 @@ import csv
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
+import sys
 
 import numpy as np
 import scipy
@@ -228,16 +231,37 @@ def create_run(config, root=RESULTS_DIR):
     pump = make_pump(config, grid)
     absorber = make_absorber(config, grid)
     physical = parameters(config)
+    cells = grid.x.size*grid.y.size
+    samples = round(config["checks"]["stationarity_window_ps"] /
+                    config["save"]["stationarity_probe_every_ps"])+1
+    snapshots = math.ceil(config["time"]["t_final_ps"] /
+                          config["save"]["snapshot_every_ps"])+1
+    checkpoints = math.ceil(config["time"]["t_final_ps"] /
+                            config["save"]["checkpoint_every_ps"])+1
+    # Conservative planning estimate: RK4/FFT temporaries and one full
+    # stationarity window in RAM; uncompressed NPZ arrays on disk.
+    memory_estimate = cells*(16*20+8*8+24*(samples+1))
+    data_estimate = cells*(24*snapshots+24*(samples+3)*checkpoints)
     _write_json(path/"run_metadata.json", {
         "run_id": run_id, "utc_created": datetime.now(timezone.utc).isoformat(),
         "config_sha256": config_hash(config), "git_commit": _git_version(),
+        "launch_argv": sys.argv,
         "source_doi": DOI, "platform": platform.platform(),
         "cpu_count": os.cpu_count(), "python": platform.python_version(),
         "numpy": np.__version__, "scipy": scipy.__version__,
-        "device": "CPU", "fft_backend": "numpy.fft", "field_dtype": "complex128",
+        "device": "CPU", "fft_backend": "numpy.fft", "fft_threads": 1,
+        "field_dtype": "complex128",
         "reservoir_dtype": "float64", "derived_parameters": physical,
         "grid": {"Nx": grid.x.size, "Ny": grid.y.size, "dx_um": grid.dx,
-                 "dy_um": grid.dy, "Lx_um": grid.lx, "Ly_um": grid.ly},
+                 "dy_um": grid.dy, "Lx_um": grid.lx, "Ly_um": grid.ly,
+                 "dkx_um_inv": 2*np.pi/grid.lx, "dky_um_inv": 2*np.pi/grid.ly,
+                 "kx_nyquist_um_inv": np.pi/grid.dx,
+                 "ky_nyquist_um_inv": np.pi/grid.dy},
+        "resource_estimate": {
+            "working_memory_bytes": memory_estimate,
+            "output_bytes": data_estimate,
+            "disk_free_bytes_at_start": shutil.disk_usage(root).free,
+            "note": "Conservative uncompressed-array estimate"},
         "numerical_boundary": {
             "fft_boundary": "periodic",
             "absorbing_layer": config["space"]["absorbing_layer"],

@@ -101,7 +101,8 @@ def _figure_0d(data_dir, out):
     return files
 
 
-def _pair_figures(gaussian_run, ring_run, out):
+def _pair_figures(gaussian_run, ring_run, out, *,
+                  gaussian_spectrum_runs=(), ring_spectrum_runs=()):
     gauss, gp, gn, gt = _latest(gaussian_run)
     ring, rp, rn, rt = _latest(ring_run)
     pairs = ((gauss, gp, gn, gt), (ring, rp, rn, rt))
@@ -176,20 +177,47 @@ def _pair_figures(gaussian_run, ring_run, out):
     fig.text(0.5, -0.035, provenance, ha="center", fontsize=8)
     files.append(_save(fig, out, "F4_current_phase"))
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-    for ax, (run, psi, _nr, _t) in zip(axes, pairs):
-        grid = make_grid(run["config"])
-        power = np.fft.fftshift(abs(spectrum(psi, grid))**2)
-        kx, ky = np.fft.fftshift(grid.kx), np.fft.fftshift(grid.ky)
-        image = ax.imshow(np.log10(power+1e-20), origin="lower",
-            extent=(kx[0], kx[-1], ky[0], ky[-1]), cmap="magma")
-        ax.set(xlabel="kx, мкм⁻¹", ylabel="ky, мкм⁻¹",
-               title=f"{run['config']['pump']['kind']}: log₁₀(|ψ̃|² / мкм²)")
-        ax.set_xlim(-4, 4)
-        ax.set_ylim(-4, 4)
-        fig.colorbar(image, ax=ax, shrink=0.75)
-    fig.suptitle("F5. Импульсные спектры", fontsize=14)
-    fig.text(0.5, -0.065, provenance, ha="center", fontsize=8)
+    def spectrum_source(source):
+        run, psi, _nr, time_ps = _latest(source)
+        return run, psi, time_ps
+    spectrum_rows = [
+        [(gauss, gp, gt)]+[spectrum_source(source)
+                            for source in gaussian_spectrum_runs],
+        [(ring, rp, rt)]+[spectrum_source(source)
+                           for source in ring_spectrum_runs],
+    ]
+    columns = max(map(len, spectrum_rows))
+    fig, axes = plt.subplots(2, columns, figsize=(5*columns, 8),
+                             squeeze=False, layout="constrained")
+    maximum = max(float(np.max(abs(spectrum(
+        psi, make_grid(run["config"])))**2))
+        for row in spectrum_rows for run, psi, _time in row)
+    vmax = np.log10(max(maximum, 1e-20))
+    vmin = vmax-8
+    for row, entries in enumerate(spectrum_rows):
+        for col in range(columns):
+            ax = axes[row, col]
+            if col >= len(entries):
+                ax.axis("off")
+                continue
+            run, psi, time_ps = entries[col]
+            grid = make_grid(run["config"])
+            power = np.fft.fftshift(abs(spectrum(psi, grid))**2)
+            kx, ky = np.fft.fftshift(grid.kx), np.fft.fftshift(grid.ky)
+            image = ax.imshow(np.log10(np.maximum(power, 1e-30)), origin="lower",
+                extent=(kx[0], kx[-1], ky[0], ky[-1]), cmap="magma",
+                vmin=vmin, vmax=vmax)
+            ax.set(xlabel="kx, мкм⁻¹", ylabel="ky, мкм⁻¹",
+                   title=f"{'Пятно' if row == 0 else 'Кольцо'}: "
+                         f"P₀={run['config']['pump']['P0']:g}, t={time_ps:g} пс\n"
+                         f"N={grid.shape[0]}, L={grid.lx:g} мкм")
+            ax.set_xlim(-4, 4)
+            ax.set_ylim(-4, 4)
+    fig.colorbar(image, ax=axes, shrink=0.7, label="log₁₀(|ψ̃|² / мкм²)")
+    fig.suptitle("F5. Импульсные спектры (общая цветовая шкала)", fontsize=14)
+    fig.text(0.5, -0.035, "Исходные прогоны: "+", ".join(
+        run["path"].name for row in spectrum_rows for run, _psi, _time in row),
+        ha="center", fontsize=7)
     files.append(_save(fig, out, "F5_momentum_spectra"))
     return files
 
@@ -240,12 +268,19 @@ def _convergence_figure(source, out):
         return None
     fig, ax = plt.subplots(figsize=(7, 4))
     x = np.arange(len(comparisons))
-    for key in ("NC_relative", "NR_relative", "density_map_relative"):
-        ax.semilogy(x, [max(r[key], 1e-15) for r in comparisons], "o-", label=key)
+    for key, label in (("NC_relative", "NC"), ("NR_relative", "NR"),
+                       ("r_rms_um_relative", "r rms"),
+                       ("density_map_relative", "карта nC")):
+        if all(key in r for r in comparisons):
+            ax.semilogy(x, [max(r[key], 1e-15) for r in comparisons],
+                        "o-", label=label)
     ax.axhline(0.005, color="k", ls="--", lw=1, label="0.5% ориентир")
-    ax.set_xticks(x, [f"{i+1}" for i in x])
-    ax.set(xlabel="Сравнение (см. convergence.json)", ylabel="Относительное отличие",
-           title="Проверка сходимости")
+    labels = [r["comparison"].replace("_vs_", " → ").replace("_", "\n")
+              for r in comparisons]
+    ax.set_xticks(x, labels, rotation=15, ha="right")
+    ax.set(xlabel="Сетка / шаг времени / область", ylabel="Относительное отличие",
+           title=f"Сходимость при t={data.get('time_ps', '?')} пс; "
+                 f"{data.get('reference_stationarity_status', 'статус не указан')}")
     ax.legend()
     return _save(fig, out, "F7_convergence")
 
@@ -253,7 +288,8 @@ def _convergence_figure(source, out):
 def make_figures(config, *, data_dir, output_dir,
                  gaussian_run=None, ring_run=None,
                  gaussian_threshold=None, ring_threshold=None,
-                 convergence=None):
+                 convergence=None, gaussian_spectrum_runs=(),
+                 ring_spectrum_runs=()):
     """Re-export only figures supported by existing stored numerical data."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -262,7 +298,10 @@ def make_figures(config, *, data_dir, output_dir,
     if (data_dir/"F1_0d_data.npz").exists() and (data_dir/"F2_0d_data.npz").exists():
         paths.extend(_figure_0d(data_dir, out))
     if gaussian_run is not None and ring_run is not None:
-        paths.extend(_pair_figures(gaussian_run, ring_run, out))
+        paths.extend(_pair_figures(
+            gaussian_run, ring_run, out,
+            gaussian_spectrum_runs=gaussian_spectrum_runs,
+            ring_spectrum_runs=ring_spectrum_runs))
     threshold = _threshold_figure(
         (("gaussian", gaussian_threshold), ("ring", ring_threshold)), out)
     if threshold is not None:
@@ -304,10 +343,13 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
                      "FAIL" if balance > 10*checks["balance_warn_rel"] else "WARN",
                      f"{balance:.3g}"))
         edge = summary["spatial_diagnostics"].get("edge_mass_fraction")
+        edge_peak = summary["spatial_diagnostics"].get("edge_peak_ratio")
         rows.append((label+": край области",
-                     "NOT_TESTED" if edge is None else
-                     "PASS" if edge <= checks["edge_mass_warn"] else "WARN",
-                     "n/a" if edge is None else f"{edge:.3g}"))
+                     "NOT_TESTED" if edge is None or edge_peak is None else
+                     "PASS" if edge <= checks["edge_mass_warn"] and
+                     edge_peak <= checks["edge_peak_warn"] else "WARN",
+                     "n/a" if edge is None or edge_peak is None else
+                     f"mass={edge:.3g}, peak={edge_peak:.3g}"))
         comparison = domain_comparisons.get(label)
         rows.append((label+": размер области",
                      "NOT_TESTED" if comparison is None else
@@ -343,7 +385,12 @@ def write_report_summary(output_path, *, gaussian_run=None, ring_run=None,
         data = convergence if isinstance(convergence, dict) else json.loads(
             Path(convergence).read_text())
         rows.append(("Сходимость", data.get("assessment", "NOT_TESTED"),
-                     data.get("status", "NOT_TESTED")))
+                     f"{data.get('status', 'NOT_TESTED')}, "
+                     f"t={data.get('time_ps', '?')} пс, "
+                     f"{data.get('reference_stationarity_status', 'статус не указан')}"))
+        rows.append(("Сходимость конечного режима",
+                     data.get("final_state_assessment", "NOT_TESTED"),
+                     "проверяется на установившемся состоянии"))
     lines = ["# Проверки проекта", "",
              "| Проверка | Статус | Фактическое значение |", "|---|---|---|"]
     lines.extend(f"| {check} | {state} | {value} |" for check, state, value in rows)

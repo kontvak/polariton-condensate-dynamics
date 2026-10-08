@@ -697,8 +697,10 @@ def confirm_threshold_nonlinear(config, threshold, *, result_root=None):
 
 def assess_threshold_nonlinear(config, threshold, below_run, above_run):
     """Reassess saved nonlinear evidence after extending either run."""
+    import csv
     import json
     from pathlib import Path
+    from diagnostics import number_reference
     import storage
 
     runs = {"below": storage.load_run(below_run) if not isinstance(below_run, dict)
@@ -714,16 +716,48 @@ def assess_threshold_nonlinear(config, threshold, below_run, above_run):
     lower = runs["below"]["summary"]
     upper = runs["above"]["summary"]
     above_edge = upper["spatial_diagnostics"].get("edge_mass_fraction")
+    above_edge_peak = upper["spatial_diagnostics"].get("edge_peak_ratio")
+    # A changing condensate can still be long lived. Check that its signal
+    # remains resolved throughout the final stationarity window; the linear
+    # bracket, rather than a brightness cutoff, defines the threshold.
+    grid = make_grid(runs["above"]["config"])
+    with np.load(runs["above"]["snapshots"][0]) as initial:
+        initial_nc = float(np.sum(abs(initial["psi"])**2)*grid.da)
+    nref = number_reference(config, grid, initial_nc)
+    window = float(config["checks"]["stationarity_window_ps"])
+    with (runs["above"]["path"]/"diagnostics.csv").open(newline="") as handle:
+        history = [(float(row["t_ps"]), float(row["NC"]))
+                   for row in csv.DictReader(handle)
+                   if float(row["t_ps"]) >= upper["time_ps"]-window-1e-8
+                   and float(row["t_ps"]) <= upper["time_ps"]+1e-8]
+    persistence = {
+        "window_ps": window, "samples": len(history),
+        "initial_NC": initial_nc,
+        "minimum_NC": min((nc for _, nc in history), default=None),
+        "signal_floor_NC": config["checks"]["signal_min_rel"]*nref,
+        "status": "NOT_TESTED",
+    }
+    if (len(history) >= 2
+            and history[-1][0]-history[0][0] >= window-1e-8
+            and upper["stationarity"].get("dense_points", 0)
+            >= round(window/config["save"]["stationarity_reference_every_ps"])+1):
+        persistence["status"] = (
+            "PERSISTENT" if persistence["minimum_NC"]
+            > max(initial_nc, persistence["signal_floor_NC"])
+            else "DECAYING_OR_UNRESOLVED")
     quality_pass = (
         above_edge is not None
+        and above_edge_peak is not None
         and above_edge <= config["checks"]["edge_mass_warn"]
+        and above_edge_peak <= config["checks"]["edge_peak_warn"]
         and upper["balance_relative_residual"] <= config["checks"]["balance_warn_rel"])
     status = "SUPPORTED" if (
         lower["run_status"] == "RUN_COMPLETED"
         and upper["run_status"] == "RUN_COMPLETED"
         and lower["stationarity"]["stationarity_status"] == "DECAYED"
-        and upper["stationarity"]["stationarity_status"] in
-        ("STATIONARY_MODE", "TIME_PERIODIC")
+        and (upper["stationarity"]["stationarity_status"] in
+             ("STATIONARY_MODE", "TIME_PERIODIC")
+             or persistence["status"] == "PERSISTENT")
         and quality_pass
     ) else "UNRESOLVED"
     report = {"status": status, "below": str(runs["below"]["path"]),
@@ -736,6 +770,8 @@ def assess_threshold_nonlinear(config, threshold, below_run, above_run):
               "above_final_time_ps": upper["time_ps"],
               "above_NC": upper["observables"]["NC"],
               "above_edge_mass_fraction": above_edge,
+              "above_edge_peak_ratio": above_edge_peak,
+              "above_persistence": persistence,
               "above_balance_relative_residual": upper["balance_relative_residual"]}
     if threshold.get("run_dir"):
         path = Path(threshold["run_dir"])
@@ -899,12 +935,19 @@ def convergence_study(config, *, grids=(256, 512, 1024),
                   for key in integral_keys if key in r and r[key] >= 0.005]
     outcome = {"cases": {k: str(v["path"]) for k, v in cases.items()},
                "comparisons": comparisons,
+               "time_ps": float(config["time"]["t_final_ps"]),
+               "reference_stationarity_status": (
+                   cases[f"grid_{base_n}"]["summary"]["stationarity"]
+                   ["stationarity_status"]),
                "status": "COMPLETED" if complete else "NOT_TESTED",
                "assessment": ("NOT_TESTED" if not complete else
                               "WARN" if violations else "PASS"),
                "integral_tolerance_rel": 0.005,
                "observed_time_order": time_order,
                "violations": violations}
+    outcome["final_state_assessment"] = (
+        outcome["assessment"] if outcome["reference_stationarity_status"]
+        in ("STATIONARY_MODE", "TIME_PERIODIC") else "NOT_TESTED")
     (root/"convergence.json").write_text(
         json.dumps(outcome, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
     storage.write_summary(root, {"run_status": "RUN_COMPLETED" if outcome["status"] == "COMPLETED"
