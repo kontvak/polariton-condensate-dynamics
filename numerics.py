@@ -150,6 +150,7 @@ def simulate_2d(config, *, result_root=None, resume_dir=None, max_steps=None):
     intervals = {key: round(config["save"][key]/dt) for key in config["save"]}
     budget = config["checks"]["max_walltime_per_run_minutes"]*60
     warnings = {}
+    previous_diagnostic = None
     status, step = "RUN_INCOMPLETE", first_step
     try:
         for step in range(first_step+1, requested_steps+1):
@@ -182,13 +183,36 @@ def simulate_2d(config, *, result_root=None, resume_dir=None, max_steps=None):
                 extra = spatial_diagnostics(psi, nr, pump, grid, config, nref)
                 absolute, relative = balance_residual(
                     initial_total, nc+nr_total, integral, scale)
+                session_elapsed = time.perf_counter()-clock
+                mean_step_ms = 1000*session_elapsed/max(step-first_step, 1)
+                signal_floor = config["checks"]["signal_min_rel"]*nref
+                growth_rate = None
+                if (previous_diagnostic is not None
+                        and min(nc, previous_diagnostic[1]) > signal_floor):
+                    growth_rate = float(np.log(nc/previous_diagnostic[1]) /
+                                        (time_ps-previous_diagnostic[0]))
                 row = diagnostic_row(step, time_ps, obs, extra, absolute,
-                                     relative, tracker.last)
+                                     relative, tracker.last, {
+                                         "steps_total": requested_steps,
+                                         "elapsed_s": old_wall+session_elapsed,
+                                         "eta_remaining_s": (requested_steps-step)
+                                         *mean_step_ms/1000,
+                                         "step_ms": mean_step_ms,
+                                         "NC_growth_rate_ps_inv": growth_rate,
+                                         "phase_frequency_est_ps_inv": None,
+                                         "nonfinite": 0})
                 storage.append_csv(path, row)
                 storage.log(path, "[STEP] "+", ".join(
-                    f"{k}={row[k]}" for k in ("t_ps", "NC", "NR",
-                    "balance_relative_residual", "edge_mass_fraction",
-                    "high_k_fraction", "stationarity_status")))
+                    f"{k}={row[k]}" for k in (
+                        "t_ps", "step", "steps_total", "elapsed_s",
+                        "eta_remaining_s", "step_ms", "NC", "NR",
+                        "NC_growth_rate_ps_inv", "NC_max_um2_inv",
+                        "nR_min_um2_inv", "nR_max_um2_inv", "gain_max_ps_inv",
+                        "phase_frequency_est_ps_inv", "j_max_um_inv_ps_inv",
+                        "edge_mass_fraction", "edge_peak_ratio",
+                        "balance_relative_residual", "high_k_fraction",
+                        "stationarity_status", "nonfinite")))
+                previous_diagnostic = (time_ps, nc)
                 if step % round(config["checks"]["stationarity_window_ps"]/dt) == 0:
                     storage.log(path, "[STATIONARITY] "+", ".join(
                         f"{key}={tracker.last.get(key)}" for key in (
@@ -292,14 +316,15 @@ def simulate_2d(config, *, result_root=None, resume_dir=None, max_steps=None):
     return storage.load_run(path)
 
 
-def diagnostic_row(step, time_ps, obs, extra, absolute, relative, stationarity):
+def diagnostic_row(step, time_ps, obs, extra, absolute, relative, stationarity,
+                   performance=None):
     keys = ("NC_window_span", "NR_window_span", "density_change_max",
             "reservoir_change_max", "field_aligned_change_max",
             "current_change_max", "density_reference_change_max",
             "reservoir_reference_change_max", "field_reference_change_max",
             "current_reference_change_max", "current_status",
             "dense_points", "probe_points", "final_log_NC_slope_per_ps")
-    return {"step": step, "t_ps": time_ps, **obs, **extra,
+    return {"step": step, "t_ps": time_ps, **(performance or {}), **obs, **extra,
             "balance_absolute_residual": absolute,
             "balance_relative_residual": relative,
             **{k: stationarity.get(k) for k in keys},
