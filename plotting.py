@@ -59,45 +59,121 @@ def _latest(run):
         return run, values["psi"].copy(), values["nR"].copy(), float(values["time_ps"])
 
 
-def _save(fig, out, name):
+# Match the compact typography used in dispersion_curve figures.
+REPORT_STYLE = {
+    "figure.dpi": 120, "font.size": 9, "font.family": "DejaVu Sans",
+    "axes.titlesize": 10, "axes.labelsize": 9, "legend.fontsize": 8,
+    "xtick.labelsize": 8, "ytick.labelsize": 8, "axes.grid": True,
+    "grid.alpha": 0.25, "grid.linewidth": 0.6, "axes.linewidth": 0.8,
+    "lines.linewidth": 1.5, "pdf.fonttype": 42, "ps.fonttype": 42,
+    "figure.constrained_layout.w_pad": 0.04,
+    "figure.constrained_layout.h_pad": 0.06,
+}
+
+
+def _save(fig, out, name, caption):
+    """Export a report image, a vector PDF and its separate English caption."""
     path = out/f"{name}.png"
-    fig.savefig(path, dpi=180, bbox_inches="tight", facecolor="white")
+    fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.06,
+                facecolor="white", pil_kwargs={"optimize": True})
+    fig.savefig(out/f"{name}.pdf", dpi=300, bbox_inches="tight",
+                pad_inches=0.06, facecolor="white")
+    (out/f"{name}.caption.txt").write_text(caption+"\n", encoding="utf-8")
     plt.close(fig)
     return path
 
 
+def _extent(grid):
+    # The FFT grid coordinates are pixel centres, including x = -L/2.
+    return (grid.x[0]-grid.dx/2, grid.x[-1]+grid.dx/2,
+            grid.y[0]-grid.dy/2, grid.y[-1]+grid.dy/2)
+
+
+def _map_axes(ax, *, row, col, label, limit=40):
+    ax.grid(False)
+    ax.set(xlim=(-limit, limit), ylim=(-limit, limit), aspect="equal")
+    ax.set_xticks([-limit, 0, limit])
+    ax.set_yticks([-limit, 0, limit])
+    ax.set_title(label, loc="left")
+    if row == 1:
+        ax.set_xlabel(r"$x$ ($\mu$m)")
+    else:
+        ax.tick_params(labelbottom=False)
+    if col == 0:
+        geometry = "Gaussian spot" if row == 0 else "Ring pump"
+        ax.set_ylabel(geometry+"\n"+r"$y$ ($\mu$m)")
+    else:
+        ax.tick_params(labelleft=False)
+
+
+def _case_caption(run, time_ps):
+    c = run["config"]
+    mode = run["summary"]["stationarity"]["stationarity_status"]
+    state = {"STATIONARY_MODE": "stationary mode",
+             "DYNAMIC_OR_UNSETTLED": "time-dependent or unsettled state",
+             "DECAYED": "decayed signal", "TIME_PERIODIC": "time-periodic state",
+             "NONSTATIONARY_FIELD": "nonstationary field",
+             "UNDETERMINED": "low or unresolved signal",
+             "NOT_TESTED": "stationarity not evaluated"}.get(mode, mode)
+    return (f"P0 = {c['pump']['P0']:g}, t = {time_ps:g} ps, "
+            f"N = {c['space']['Nx']} × {c['space']['Ny']}, "
+            f"L = {c['space']['Lx_um']:g} × {c['space']['Ly_um']:g} µm, "
+            f"Δt = {c['time']['dt_ps']:g} ps; {state}")
+
+
 def _figure_0d(data_dir, out):
+    from matplotlib.lines import Line2D
+
     files = []
     with np.load(data_dir/"F1_0d_data.npz") as a:
-        fig, axes = plt.subplots(1, 2, figsize=(10, 3.5))
-        axes[0].plot(a["P0"], a["nC"], label="конденсат")
-        axes[0].plot(a["P0"], a["nR"], label="резервуар")
-        axes[0].axvline(1, color="k", ls="--", lw=1)
-        axes[0].set(xlabel="P₀", ylabel="Плотность, мкм⁻²", title="0D стационарные ветви")
+        fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), layout="constrained")
+        axes[0].plot(a["P0"], a["nC"], label="Condensate")
+        axes[0].plot(a["P0"], a["nR"], label="Reservoir")
+        axes[0].axvline(1, color="0.4", ls="--", lw=1)
+        axes[0].set(xlabel=r"Normalized pump, $P_0$",
+                    ylabel=r"Density ($\mu$m$^{-2}$)")
+        axes[0].set_title("(a) Steady-state densities", loc="left")
         axes[0].legend()
-        axes[1].plot(a["P0"], a["empty_branch_growth"])
-        axes[1].axhline(0, color="k", lw=1)
-        axes[1].axvline(1, color="k", ls="--", lw=1)
-        axes[1].set(xlabel="P₀", ylabel="Макс. Re λ, пс⁻¹",
-                    title="Устойчивость нулевой ветви")
-        files.append(_save(fig, out, "F1_0d_threshold"))
+        axes[1].plot(a["P0"], a["empty_branch_growth"], color="tab:blue")
+        axes[1].axhline(0, color="0.3", lw=1)
+        axes[1].axvline(1, color="0.4", ls="--", lw=1)
+        axes[1].set(xlabel=r"Normalized pump, $P_0$",
+                    ylabel=r"Largest $\mathrm{Re}\,\lambda$ (ps$^{-1}$)")
+        axes[1].set_title("(b) Empty-state stability", loc="left")
+        files.append(_save(fig, out, "F1_0d_threshold",
+            "Homogeneous condensation threshold. (a) Physical steady-state "
+            "condensate and reservoir densities. (b) Largest real part of the "
+            "density–reservoir Jacobian eigenvalues on the empty branch. "
+            "P0 = P/Pth,0D; the dashed line marks P0 = 1. "
+            "These homogeneous results do not define the threshold of a localized pump."))
     with np.load(data_dir/"F2_0d_data.npz") as a:
-        fig, axes = plt.subplots(1, 2, figsize=(10, 3.5))
-        for label in ("0p8", "1p05", "1p2", "1p5"):
-            axes[0].plot(a["t_ps"], a[f"nC_{label}"], label=f"P₀={label.replace('p', '.')}")
-            axes[1].plot(a["t_ps"], a[f"nR_{label}"], label=f"P₀={label.replace('p', '.')}")
+        fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.2), layout="constrained")
+        for i, label in enumerate(("0p8", "1p05", "1p2", "1p5")):
+            color = f"C{i}"
+            power_label = label.replace("p", ".")
+            axes[0].plot(a["t_ps"], a[f"nC_{label}"], color=color)
+            axes[1].plot(a["t_ps"], a[f"nR_{label}"], color=color,
+                         label=power_label)
             if f"nC_SL_{label}" in a.files:
-                axes[0].plot(a["t_ps"], a[f"nC_SL_{label}"], ls="--", alpha=0.7,
-                             label=f"SL {label.replace('p', '.')}")
-        axes[0].set(xlabel="t, пс", ylabel="nC, мкм⁻²",
-                    title="Конденсат: сплошная — полный 0D, пунктир — SL")
-        axes[1].set(xlabel="t, пс", ylabel="nR, мкм⁻²", title="Резервуар")
-        axes[0].legend(fontsize=8, ncol=2)
-        fig.text(0.5, -0.02,
-                 "Полная модель: nR(0)=0; SL: адиабатический резервуар. "
-                 "Начальные условия резервуара различаются.",
-                 ha="center", fontsize=8)
-        files.append(_save(fig, out, "F2_0d_dynamics"))
+                axes[0].plot(a["t_ps"], a[f"nC_SL_{label}"], ls="--", color=color)
+        axes[0].set(xlabel=r"Time, $t$ (ps)",
+                    ylabel=r"Condensate density, $n_C$ ($\mu$m$^{-2}$)")
+        axes[1].set(xlabel=r"Time, $t$ (ps)",
+                    ylabel=r"Reservoir density, $n_R$ ($\mu$m$^{-2}$)")
+        axes[0].set_title("(a) Condensate dynamics", loc="left")
+        axes[1].set_title("(b) Reservoir dynamics", loc="left")
+        axes[0].legend(handles=[
+            Line2D([], [], color="0.25", label="Full 0D model"),
+            Line2D([], [], color="0.25", ls="--", label="Stuart–Landau")],
+            loc="upper left")
+        axes[1].legend(title=r"$P_0$", loc="lower right", ncol=2)
+        files.append(_save(fig, out, "F2_0d_dynamics",
+            "Homogeneous condensate and reservoir dynamics for P0 = 0.8, 1.05, "
+            "1.2 and 1.5 (the same colours in both panels). Solid curves: independent "
+            "integration of the full 0D model with nR(0) = 0 and nC(0) = 10⁻⁴ µm⁻². "
+            "Dashed curves: Stuart–Landau approximation above threshold. Its "
+            "adiabatic reservoir assumption differs from the full-model startup; "
+            "the approximation is intended for the near-threshold regime."))
     return files
 
 
@@ -106,157 +182,208 @@ def _pair_figures(gaussian_run, ring_run, out, *,
     gauss, gp, gn, gt = _latest(gaussian_run)
     ring, rp, rn, rt = _latest(ring_run)
     pairs = ((gauss, gp, gn, gt), (ring, rp, rn, rt))
-    provenance = "\n".join(
-        f"{run['path'].name}: P₀={run['config']['pump']['P0']}, "
-        f"N={run['config']['space']['Nx']}, "
-        f"L={run['config']['space']['Lx_um']} мкм, "
-        f"absorber={run['config']['space']['absorbing_layer']}, "
-        f"status={run['summary']['stationarity']['stationarity_status']}, "
-        f"edge={run['summary']['spatial_diagnostics'].get('edge_mass_fraction')}"
-        for run, _psi, _nr, _time in pairs)
+    cases = ("Top row: Gaussian spot ("+_case_caption(gauss, gt)+"). "
+             "Bottom row: ring pump ("+_case_caption(ring, rt)+"). ")
     arrays = []
-    for run, psi, nr, time_ps in pairs:
+    for run, psi, nr, _time in pairs:
         grid = make_grid(run["config"])
         p = parameters(run["config"])
         pump = make_pump(run["config"], grid)
         bg = p["eta"]*pump if p["background_blueshift"] else 0
-        potential = p["gC"]*abs(psi)**2+p["gR"]*(nr+bg)
-        arrays.append((pump, nr, abs(psi)**2, potential))
-    labels = ("P, мкм⁻² пс⁻¹", "nR, мкм⁻²", "nC, мкм⁻²", "V, мэВ")
-    fig, axes = plt.subplots(2, 4, figsize=(17, 8), layout="constrained")
+        energy = p["gC"]*abs(psi)**2+p["gR"]*(nr+bg)
+        arrays.append((pump, nr, abs(psi)**2, energy))
+
+    fig = plt.figure(figsize=(10.2, 5.9), layout="constrained")
+    gs = fig.add_gridspec(3, 4, height_ratios=(1, 1, 0.075), hspace=0.06)
+    titles = ("Pump rate", "Reservoir density", "Condensate density", "Interaction energy")
+    units = (r"$P$ ($\mu$m$^{-2}$ ps$^{-1}$)",
+             r"$n_R$ ($\mu$m$^{-2}$)", r"$n_C$ ($\mu$m$^{-2}$)",
+             r"$V_{\mathrm{int}}$ (meV)")
     for col in range(4):
         vmax = max(float(np.max(row[col])) for row in arrays)
         for row in range(2):
-            run, psi, nr, time_ps = pairs[row]
-            grid = make_grid(run["config"])
-            image = axes[row, col].imshow(arrays[row][col], origin="lower",
-                extent=(-grid.lx/2, grid.lx/2, -grid.ly/2, grid.ly/2),
-                vmin=0, vmax=vmax, cmap="viridis")
-            axes[row, col].set_xlim(-40, 40)
-            axes[row, col].set_ylim(-40, 40)
-            if row == 0:
-                axes[row, col].set_title(labels[col], fontsize=11)
-            if row == 1:
-                axes[row, col].set_xlabel("x, мкм")
-            if col == 0:
-                axes[row, col].set_ylabel(
-                    ("Пятно" if row == 0 else "Кольцо")+"\ny, мкм")
-            fig.colorbar(image, ax=axes[row, col], shrink=0.75)
-    fig.suptitle("F3. Накачка, резервуар, плотность и потенциал", fontsize=14)
-    fig.text(0.5, -0.035, provenance, ha="center", fontsize=8)
-    files = [_save(fig, out, "F3_density_reservoir_potential")]
+            ax = fig.add_subplot(gs[row, col])
+            grid = make_grid(pairs[row][0]["config"])
+            im = ax.imshow(arrays[row][col], origin="lower", extent=_extent(grid),
+                           vmin=0, vmax=vmax, cmap="viridis", interpolation="nearest",
+                           rasterized=True)
+            _map_axes(ax, row=row, col=col,
+                      label=f"({chr(97+row*4+col)}) {titles[col]}")
+        cax = fig.add_subplot(gs[2, col])
+        cax.grid(False)
+        cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+        cb.ax.locator_params(nbins=3)
+        cb.set_label(units[col])
+    files = [_save(fig, out, "F3_density_reservoir_potential",
+        "Real-space pump and condensate profiles. "+cases+
+        "Columns show the pump rate, reservoir density, condensate density and "
+        "interaction-induced energy shift Vint = gC nC + gR(nR + ηP). "
+        "Each column uses the same colour scale for both geometries. "
+        "The displayed region is the central 80 × 80 µm; the full numerical domain "
+        "has periodic boundaries and no absorbing layer.")]
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8), layout="constrained")
-    max_current = 0.0
-    for run, psi, _nr, _time in pairs:
-        jx0, jy0 = current(psi, make_grid(run["config"]), run["config"])
-        max_current = max(max_current, float(np.max(np.hypot(jx0, jy0))))
-    for row, (run, psi, nr, time_ps) in enumerate(pairs):
+    fig = plt.figure(figsize=(7.2, 7.0), layout="constrained")
+    gs = fig.add_gridspec(3, 2, height_ratios=(1, 1, 0.065), hspace=0.04)
+    max_density = max(float(np.max(abs(psi)**2)) for _, psi, _, _ in pairs)
+    max_current = max(float(np.max(np.hypot(*current(
+        psi, make_grid(run["config"]), run["config"])))) for run, psi, _, _ in pairs)
+    phase_cmap = plt.get_cmap("twilight").copy()
+    phase_cmap.set_bad("0.94")
+    arrow_reference = 0.5 if max_current >= 0.5 else max_current/2
+    for row, (run, psi, _nr, _time) in enumerate(pairs):
         grid = make_grid(run["config"])
         density = abs(psi)**2
         jx, jy = current(psi, grid, run["config"])
-        stride = max(1, grid.shape[0]//40)
-        axes[row, 0].imshow(density, origin="lower",
-            extent=(-grid.lx/2, grid.lx/2, -grid.ly/2, grid.ly/2), cmap="magma")
-        axes[row, 0].quiver(grid.x[::stride], grid.y[::stride],
-            jx[::stride, ::stride], jy[::stride, ::stride], color="cyan",
-            scale=max(max_current/5, 1e-30), scale_units="xy")
+        density_ax, phase_ax = [fig.add_subplot(gs[row, col]) for col in range(2)]
+        density_im = density_ax.imshow(density, origin="lower", extent=_extent(grid),
+            cmap="magma", vmin=0, vmax=max_density, interpolation="nearest", rasterized=True)
+        # Sample the vector field at a fixed physical spacing within the crop.
+        stride = max(1, round(3.0/grid.dx))
+        ix = np.flatnonzero(abs(grid.x) <= 37)[::stride]
+        iy = np.flatnonzero(abs(grid.y) <= 37)[::stride]
+        sampled_jx, sampled_jy = jx[np.ix_(iy, ix)], jy[np.ix_(iy, ix)]
+        weak_current = np.hypot(sampled_jx, sampled_jy) < 0.02*max_current
+        vectors = density_ax.quiver(grid.x[ix], grid.y[iy],
+            np.ma.masked_where(weak_current, sampled_jx),
+            np.ma.masked_where(weak_current, sampled_jy), color="cyan",
+            scale=max(max_current/5, 1e-30), scale_units="xy", angles="xy",
+            width=0.005, headwidth=3.5, minlength=0)
+        density_ax.quiverkey(vectors, 0.74, 0.08, arrow_reference,
+            rf"${arrow_reference:g}\;\mu\mathrm{{m}}^{{-1}}\mathrm{{ps}}^{{-1}}$",
+            labelpos="N", coordinates="axes", color="cyan", labelcolor="white",
+            fontproperties={"size": 7})
         phase = np.ma.masked_where(density < 1e-3*np.max(density), np.angle(psi))
-        im = axes[row, 1].imshow(phase, origin="lower",
-            extent=(-grid.lx/2, grid.lx/2, -grid.ly/2, grid.ly/2),
-            cmap="twilight", vmin=-np.pi, vmax=np.pi)
-        axes[row, 0].set(title=f"{run['config']['pump']['kind']}: плотность и ток",
-                         xlabel="x, мкм", ylabel="y, мкм")
-        axes[row, 1].set(title="Фаза (маска 0.1% от максимума)",
-                         xlabel="x, мкм", ylabel="y, мкм")
-        fig.colorbar(im, ax=axes[row, 1], shrink=0.75)
-        for ax in axes[row]:
-            ax.set_xlim(-40, 40)
-            ax.set_ylim(-40, 40)
-    fig.suptitle("F4. Плотность, ток и фаза", fontsize=14)
-    fig.text(0.5, -0.035, provenance, ha="center", fontsize=8)
-    files.append(_save(fig, out, "F4_current_phase"))
+        phase_im = phase_ax.imshow(phase, origin="lower", extent=_extent(grid),
+            cmap=phase_cmap, vmin=-np.pi, vmax=np.pi, interpolation="nearest", rasterized=True)
+        _map_axes(density_ax, row=row, col=0,
+                  label=f"({chr(97+row*2)}) Density and current")
+        _map_axes(phase_ax, row=row, col=1,
+                  label=f"({chr(98+row*2)}) Condensate phase")
+    for col, (im, label) in enumerate(((density_im, r"$n_C$ ($\mu$m$^{-2}$)"),
+                                     (phase_im, r"Phase, $\arg\psi$ (rad)"))):
+        cax = fig.add_subplot(gs[2, col])
+        cax.grid(False)
+        cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+        cb.set_label(label)
+        if col == 1:
+            cb.set_ticks([-np.pi, 0, np.pi], labels=[r"$-\pi$", "0", r"$\pi$"])
+        else:
+            cb.ax.locator_params(nbins=4)
+    files.append(_save(fig, out, "F4_current_phase",
+        "Condensate flow and phase. "+cases+
+        "Left: density with particle-current vectors; both rows use the same "
+        "density and arrow scales. Right: condensate phase, masked where "
+        "nC < 10⁻³ max(nC) in each run. Grey areas have unresolved phase. "
+        "Arrows are sampled every 3 µm; currents below 2% of the shared maximum "
+        "are omitted. The displayed region is 80 × 80 µm."))
 
     def spectrum_source(source):
         run, psi, _nr, time_ps = _latest(source)
         return run, psi, time_ps
     spectrum_rows = [
-        [(gauss, gp, gt)]+[spectrum_source(source)
-                            for source in gaussian_spectrum_runs],
-        [(ring, rp, rt)]+[spectrum_source(source)
-                           for source in ring_spectrum_runs],
+        [(gauss, gp, gt)]+[spectrum_source(source) for source in gaussian_spectrum_runs],
+        [(ring, rp, rt)]+[spectrum_source(source) for source in ring_spectrum_runs],
     ]
     columns = max(map(len, spectrum_rows))
-    fig, axes = plt.subplots(2, columns, figsize=(5*columns, 8),
-                             squeeze=False, layout="constrained")
-    maximum = max(float(np.max(abs(spectrum(
-        psi, make_grid(run["config"])))**2))
-        for row in spectrum_rows for run, psi, _time in row)
+    fig = plt.figure(figsize=(min(10.2, 3.6*columns+0.6), 6.0), layout="constrained")
+    gs = fig.add_gridspec(2, columns+1, width_ratios=[1]*columns+[0.05])
+    maximum = max(float(np.max(abs(spectrum(psi, make_grid(run["config"])))**2))
+                  for row in spectrum_rows for run, psi, _time in row)
     vmax = np.log10(max(maximum, 1e-20))
     vmin = vmax-8
+    caption_cases = []
     for row, entries in enumerate(spectrum_rows):
-        for col in range(columns):
-            ax = axes[row, col]
-            if col >= len(entries):
-                ax.axis("off")
-                continue
-            run, psi, time_ps = entries[col]
+        for col, (run, psi, time_ps) in enumerate(entries):
+            ax = fig.add_subplot(gs[row, col])
             grid = make_grid(run["config"])
             power = np.fft.fftshift(abs(spectrum(psi, grid))**2)
             kx, ky = np.fft.fftshift(grid.kx), np.fft.fftshift(grid.ky)
-            image = ax.imshow(np.log10(np.maximum(power, 1e-30)), origin="lower",
-                extent=(kx[0], kx[-1], ky[0], ky[-1]), cmap="magma",
-                vmin=vmin, vmax=vmax)
-            ax.set(xlabel="kx, мкм⁻¹", ylabel="ky, мкм⁻¹",
-                   title=f"{'Пятно' if row == 0 else 'Кольцо'}: "
-                         f"P₀={run['config']['pump']['P0']:g}, t={time_ps:g} пс\n"
-                         f"N={grid.shape[0]}, L={grid.lx:g} мкм")
-            ax.set_xlim(-4, 4)
-            ax.set_ylim(-4, 4)
-    fig.colorbar(image, ax=axes, shrink=0.7, label="log₁₀(|ψ̃|² / мкм²)")
-    fig.suptitle("F5. Импульсные спектры (общая цветовая шкала)", fontsize=14)
-    fig.text(0.5, -0.035, "Исходные прогоны: "+", ".join(
-        run["path"].name for row in spectrum_rows for run, _psi, _time in row),
-        ha="center", fontsize=7)
-    files.append(_save(fig, out, "F5_momentum_spectra"))
+            dkx, dky = kx[1]-kx[0], ky[1]-ky[0]
+            im = ax.imshow(np.log10(np.maximum(power, 1e-30)), origin="lower",
+                extent=(kx[0]-dkx/2, kx[-1]+dkx/2, ky[0]-dky/2, ky[-1]+dky/2),
+                cmap="magma", vmin=vmin, vmax=vmax, interpolation="nearest", rasterized=True)
+            geometry = "Gaussian spot" if row == 0 else "Ring pump"
+            letter = chr(97+row*columns+col)
+            ax.set_title(f"({letter}) {geometry}, "+rf"$L={grid.lx:g}\,\mu$m", loc="left")
+            ax.set(xlim=(-4, 4), ylim=(-4, 4), aspect="equal")
+            ax.set_xticks([-4, -2, 0, 2, 4])
+            ax.set_yticks([-4, -2, 0, 2, 4])
+            ax.grid(False)
+            if row == 1:
+                ax.set_xlabel(r"$k_x$ ($\mu$m$^{-1}$)")
+            else:
+                ax.tick_params(labelbottom=False)
+            if col == 0:
+                ax.set_ylabel(r"$k_y$ ($\mu$m$^{-1}$)")
+            else:
+                ax.tick_params(labelleft=False)
+            caption_cases.append(f"({letter}) {geometry}: "+_case_caption(run, time_ps)+".")
+    cax = fig.add_subplot(gs[:, -1])
+    cax.grid(False)
+    cb = fig.colorbar(im, cax=cax)
+    cb.set_label(r"$\log_{10}[|\widetilde\psi|^2/(\mu\mathrm{m}^2)]$")
+    files.append(_save(fig, out, "F5_momentum_spectra",
+        "Momentum-space condensate density. All panels use the same absolute "
+        "logarithmic colour scale and Fourier convention. "+" ".join(caption_cases)+
+        " The smaller-domain panels are comparison runs; their boundary diagnostics "
+        "must be checked before interpreting differences as physical effects."))
     return files
 
 
 def _threshold_figure(results, out):
-    fig, ax = plt.subplots(figsize=(6, 4))
+    available = [(label, source) for label, source in results if source is not None]
+    if not available:
+        return None
+    fig, axes = plt.subplots(1, len(available), figsize=(7.2, 3.2),
+                             squeeze=False, layout="constrained")
     any_data = False
-    colors = {"gaussian": "tab:blue", "ring": "tab:orange"}
-    for label, source in results:
-        if source is None:
-            continue
-        data = source if isinstance(source, dict) else json.loads(Path(source).read_text())
+    captions = []
+    for ax, (label, source), letter in zip(axes[0], available, "ab"):
+        data = source if isinstance(source, (dict, list)) else json.loads(Path(source).read_text())
         bracket = data.get("threshold", data) if isinstance(data, dict) else {}
         points = data if isinstance(data, list) else bracket.get("points", [])
-        color = colors[label]
-        for status, marker in (("STABLE", "o"), ("UNSTABLE", "^"),
-                               ("UNRESOLVED", "x")):
+        if points:
+            powers = [p["P0"] for p in points]
+            margin = max(0.05*(max(powers)-min(powers)), 0.05)
+            ax.set_xlim(min(powers)-margin, max(powers)+margin)
+        if "P0_lo" in bracket and "P0_hi" in bracket:
+            lo, hi = bracket["P0_lo"], bracket["P0_hi"]
+            mid = (lo+hi)/2
+            ax.set_xlim(lo-0.25*mid, hi+0.25*mid)
+            ax.axvspan(lo, hi, color="0.5", alpha=0.18)
+            ax.text(0.04, 0.96, rf"$P_{{0,c}}\in[{lo:.6g},\,{hi:.6g}]$",
+                    transform=ax.transAxes, va="top", fontsize=8)
+            captions.append(f"{label}: P0,c ∈ [{lo:.6g}, {hi:.6g}].")
+        for status, marker, color, legend in (("STABLE", "o", "tab:blue", "Decaying"),
+                ("UNSTABLE", "^", "tab:orange", "Growing"),
+                ("UNRESOLVED", "x", "0.5", "Unresolved")):
             selected = [p for p in points if p.get("status") == status
-                        and p.get("sigma_late_per_ps") is not None]
+                        and p.get("sigma_late_per_ps") is not None
+                        and ax.get_xlim()[0] <= p["P0"] <= ax.get_xlim()[1]]
             if selected:
                 ax.errorbar([p["P0"] for p in selected],
-                            [p["sigma_late_per_ps"] for p in selected],
-                            yerr=[2*p.get("sigma_late_stderr", 0) for p in selected],
-                            fmt=marker, color=color, capsize=2,
-                            label=f"{label}: {status}")
+                    [p["sigma_late_per_ps"] for p in selected],
+                    yerr=[2*p.get("sigma_late_stderr", 0) for p in selected],
+                    fmt=marker, ms=4, color=color, capsize=2, label=legend)
                 any_data = True
-        if "P0_lo" in bracket and "P0_hi" in bracket:
-            status = data.get("threshold_validation", {}).get("status", bracket["status"])
-            ax.axvspan(bracket["P0_lo"], bracket["P0_hi"], color=color,
-                       alpha=0.12, label=f"{label}: {status}")
+        ax.axhline(0, color="0.3", lw=1)
+        geometry = "Gaussian spot" if label == "gaussian" else "Ring pump"
+        ax.set_title(f"({letter}) {geometry}", loc="left")
+        ax.set_xlabel(r"Normalized pump, $P_0$")
+        ax.set_ylabel(r"Linear growth rate, $\sigma$ (ps$^{-1}$)")
+        ax.legend(loc="lower right", fontsize=7)
     if not any_data:
         plt.close(fig)
         return None
-    ax.axhline(0, color="k", lw=1)
-    ax.axvline(1, color="grey", ls="--", label="0D ориентир")
-    ax.set(xlabel="P₀", ylabel="Линейный рост σ, пс⁻¹",
-           title="2D линейный порог (замороженный резервуар)")
-    ax.legend(fontsize=7)
-    return _save(fig, out, "F6_linear_threshold")
+    return _save(fig, out, "F6_linear_threshold",
+        "Localized-pump condensation thresholds from linear stability of the "
+        "empty branch, with the reservoir frozen at nR = P/γR. "
+        "P0 normalizes the pump amplitude by the homogeneous threshold. "
+        "Symbols distinguish decaying, growing and unresolved perturbations; "
+        "error bars show two standard errors of the late-time growth-rate fit. "
+        "Shaded bands mark the refined threshold brackets. "+" ".join(captions)+
+        " Only the neighbourhood of each threshold is displayed; complete scans "
+        "and grid/domain validation are stored with the numerical results.")
 
 
 def _convergence_figure(source, out):
@@ -266,32 +393,58 @@ def _convergence_figure(source, out):
     comparisons = [r for r in data["comparisons"] if r["status"] == "COMPARED"]
     if not comparisons:
         return None
-    fig, ax = plt.subplots(figsize=(7, 4))
-    x = np.arange(len(comparisons))
-    for key, label in (("NC_relative", "NC"), ("NR_relative", "NR"),
-                       ("r_rms_um_relative", "r rms"),
-                       ("density_map_relative", "карта nC")):
-        if all(key in r for r in comparisons):
-            ax.semilogy(x, [max(r[key], 1e-15) for r in comparisons],
-                        "o-", label=label)
-    ax.axhline(0.005, color="k", ls="--", lw=1, label="0.5% ориентир")
-    def comparison_label(name):
-        if name.startswith("grid_"):
-            return "сетка\n"+name.removeprefix("grid_").replace("_vs_", " → ")
-        if name.startswith("dt_"):
-            return "Δt, пс\n"+name.removeprefix("dt_").replace("_vs_", " → ")
-        return "размер\nобласти"
-    labels = [comparison_label(r["comparison"]) for r in comparisons]
-    ax.set_xticks(x, labels, rotation=15, ha="right")
+    groups = [("Spatial resolution", [r for r in comparisons if r["comparison"].startswith("grid_")]),
+              ("Time-step refinement", [r for r in comparisons if r["comparison"].startswith("dt_")]),
+              ("Domain size", [r for r in comparisons if r["comparison"] == "domain_expansion"])]
+    fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.4), sharey=True, layout="constrained")
+    for ax, (title, entries), letter in zip(axes, groups, "abc"):
+        x = np.arange(len(entries))
+        for key, label, marker in (("NC_relative", r"$N_C$", "o"),
+                ("NR_relative", r"$N_R$", "s"),
+                ("r_rms_um_relative", r"$r_{\mathrm{rms}}$", "^"),
+                ("density_map_relative", r"$n_C$ map", "D")):
+            if entries and all(key in r for r in entries):
+                ax.semilogy(x, [max(r[key], 1e-15) for r in entries],
+                            marker+"-", ms=4, label=label)
+        ax.axhline(0.005, color="0.35", ls="--", lw=1, label="0.5% reference")
+        labels = []
+        for entry in entries:
+            name = entry["comparison"]
+            if name.startswith("grid_"):
+                labels.append(name.removeprefix("grid_").replace("_vs_", " → "))
+            elif name.startswith("dt_"):
+                labels.append(name.removeprefix("dt_").replace("_vs_", " → "))
+            else:
+                a, b = _run(entry["reference"]), _run(entry["candidate"])
+                labels.append(f"{a['config']['space']['Lx_um']:g} → "
+                              f"{b['config']['space']['Lx_um']:g}")
+        ax.set_xticks(x, labels)
+        ax.set_xlim(-0.35, max(len(entries)-1, 0)+0.35)
+        ax.set_title(f"({letter}) {title}", loc="left")
+    axes[0].set(ylabel="Relative difference", xlabel="Grid refinement")
+    axes[1].set_xlabel(r"$\Delta t$ refinement (ps)")
+    axes[2].set_xlabel(r"Domain width ($\mu$m)")
+    axes[2].legend(loc="lower left", fontsize=7)
+    time_ps = data.get("time_ps", "unknown")
     mode = data.get("reference_stationarity_status", "NOT_TESTED")
-    mode_label = ("установившийся режим" if mode == "STATIONARY_MODE" else
-                  "переходный режим" if mode == "DYNAMIC_OR_UNSETTLED" else mode)
-    time_label = (f"{data['time_ps']:g}" if isinstance(data.get("time_ps"),
-                   (int, float)) else "?")
-    ax.set(xlabel="Сетка / шаг времени / область", ylabel="Относительное отличие",
-           title=f"Сходимость при t={time_label} пс ({mode_label})")
-    ax.legend()
-    return _save(fig, out, "F7_convergence")
+    state = {"STATIONARY_MODE": "stationary mode",
+             "DYNAMIC_OR_UNSETTLED": "transient or time-dependent state"}.get(mode, mode)
+    reference_path = data.get("cases", {}).get("grid_512", comparisons[0]["candidate"])
+    reference_config = _run(reference_path)["config"]
+    geometry = "Gaussian spot" if reference_config["pump"]["kind"] == "gaussian" else "ring pump"
+    case = f"Representative case: {geometry}, P0 = {reference_config['pump']['P0']:g}. "
+    return _save(fig, out, "F7_convergence",
+        f"Numerical convergence at t = {time_ps} ps. "+case+"(a) Spatial refinement at "
+        "fixed domain width and time step. (b) Time-step refinement on a fixed "
+        "grid. (c) Domain expansion at fixed spatial spacing. Curves show relative "
+        "differences in condensate number NC, reservoir number NR, condensate "
+        "rms radius and the density map. The dashed line is the 0.5% reference "
+        f"for integral observables. The reference run is a {state}. "
+        "The same continuous initial field is sampled at identical physical coordinates "
+        "in all runs. "
+        "This series tests the state at the specified time; it does not establish "
+        "convergence of a later stationary regime. Differences above the target "
+        "are retained in the figure and diagnostic report.")
 
 
 def make_figures(config, *, data_dir, output_dir,
@@ -299,25 +452,55 @@ def make_figures(config, *, data_dir, output_dir,
                  gaussian_threshold=None, ring_threshold=None,
                  convergence=None, gaussian_spectrum_runs=(),
                  ring_spectrum_runs=()):
-    """Re-export only figures supported by existing stored numerical data."""
+    """Export report-ready PNG/PDF figures and separate English captions."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     data_dir = Path(data_dir)
     paths = []
-    if (data_dir/"F1_0d_data.npz").exists() and (data_dir/"F2_0d_data.npz").exists():
-        paths.extend(_figure_0d(data_dir, out))
-    if gaussian_run is not None and ring_run is not None:
-        paths.extend(_pair_figures(
-            gaussian_run, ring_run, out,
-            gaussian_spectrum_runs=gaussian_spectrum_runs,
-            ring_spectrum_runs=ring_spectrum_runs))
-    threshold = _threshold_figure(
-        (("gaussian", gaussian_threshold), ("ring", ring_threshold)), out)
-    if threshold is not None:
-        paths.append(threshold)
-    convergence_plot = _convergence_figure(convergence, out)
-    if convergence_plot is not None:
-        paths.append(convergence_plot)
+    with plt.rc_context(REPORT_STYLE):
+        if (data_dir/"F1_0d_data.npz").exists() and (data_dir/"F2_0d_data.npz").exists():
+            paths.extend(_figure_0d(data_dir, out))
+        if gaussian_run is not None and ring_run is not None:
+            paths.extend(_pair_figures(gaussian_run, ring_run, out,
+                gaussian_spectrum_runs=gaussian_spectrum_runs,
+                ring_spectrum_runs=ring_spectrum_runs))
+        threshold = _threshold_figure(
+            (("gaussian", gaussian_threshold), ("ring", ring_threshold)), out)
+        if threshold is not None:
+            paths.append(threshold)
+        convergence_plot = _convergence_figure(convergence, out)
+        if convergence_plot is not None:
+            paths.append(convergence_plot)
+    captions = ["# Figure captions", "",
+                "PNG files are exported at 300 dpi; PDF files preserve vector text "
+                "and curves. Captions are provided separately for report insertion.", ""]
+    titles = {
+        "F1": "Homogeneous condensation threshold",
+        "F2": "Condensate and reservoir relaxation",
+        "F3": "Spatial structure under localized pumping",
+        "F4": "Particle flow and condensate phase",
+        "F5": "Momentum distributions and domain-size comparison",
+        "F6": "Linear condensation thresholds for localized pumps",
+        "F7": "Numerical convergence and finite-domain effects",
+    }
+    for path in paths:
+        number = path.stem.split("_")[0]
+        captions.extend([f"## Figure {number[1:]}. {titles[number]}", "",
+            (out/f"{path.stem}.caption.txt").read_text().strip(), ""])
+    (out/"figure_captions.md").write_text("\n".join(captions), encoding="utf-8")
+    def source_path(source):
+        if source is None:
+            return None
+        if isinstance(source, dict) and "path" in source:
+            return str(source["path"])
+        return source if isinstance(source, (dict, list)) else str(source)
+    sources = {"gaussian_run": source_path(gaussian_run), "ring_run": source_path(ring_run),
+               "gaussian_spectrum_runs": [source_path(p) for p in gaussian_spectrum_runs],
+               "ring_spectrum_runs": [source_path(p) for p in ring_spectrum_runs],
+               "gaussian_threshold": source_path(gaussian_threshold),
+               "ring_threshold": source_path(ring_threshold), "convergence": source_path(convergence),
+               "data_dir": str(data_dir), "png_dpi": 300}
+    (out/"figure_sources.json").write_text(json.dumps(sources, ensure_ascii=False, indent=2)+"\n")
     return paths
 
 
