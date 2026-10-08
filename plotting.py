@@ -71,14 +71,24 @@ REPORT_STYLE = {
 }
 
 
+REPORT_TITLES = {
+    "F1": "Homogeneous condensation threshold",
+    "F2": "Condensate and reservoir relaxation",
+    "F3": "Spatial structure under localized pumping",
+    "F4": "Particle flow and condensate phase",
+    "F5": "Momentum distributions and domain-size comparison",
+    "F6": "Linear condensation thresholds for localized pumps",
+    "F7": "Numerical convergence and finite-domain effects",
+}
+
 def _save(fig, out, name, caption):
-    """Export a report image, a vector PDF and its separate English caption."""
+    """Export a PNG and append its English caption to the common document."""
     path = out/f"{name}.png"
     fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.06,
                 facecolor="white", pil_kwargs={"optimize": True})
-    fig.savefig(out/f"{name}.pdf", dpi=300, bbox_inches="tight",
-                pad_inches=0.06, facecolor="white")
-    (out/f"{name}.caption.txt").write_text(caption+"\n", encoding="utf-8")
+    number = name.split("_")[0]
+    with (out/"figure_captions.md").open("a", encoding="utf-8") as handle:
+        handle.write(f"## Figure {number[1:]}. {REPORT_TITLES[number]}\n\n{caption}\n\n")
     plt.close(fig)
     return path
 
@@ -452,11 +462,13 @@ def make_figures(config, *, data_dir, output_dir,
                  gaussian_threshold=None, ring_threshold=None,
                  convergence=None, gaussian_spectrum_runs=(),
                  ring_spectrum_runs=()):
-    """Export report-ready PNG/PDF figures and separate English captions."""
+    """Export report-ready PNG figures and one English caption document."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     data_dir = Path(data_dir)
     paths = []
+    (out/"figure_captions.md").write_text(
+        "# Figure captions\n\nPNG figures are exported at 300 dpi.\n\n", encoding="utf-8")
     with plt.rc_context(REPORT_STYLE):
         if (data_dir/"F1_0d_data.npz").exists() and (data_dir/"F2_0d_data.npz").exists():
             paths.extend(_figure_0d(data_dir, out))
@@ -471,23 +483,6 @@ def make_figures(config, *, data_dir, output_dir,
         convergence_plot = _convergence_figure(convergence, out)
         if convergence_plot is not None:
             paths.append(convergence_plot)
-    captions = ["# Figure captions", "",
-                "PNG files are exported at 300 dpi; PDF files preserve vector text "
-                "and curves. Captions are provided separately for report insertion.", ""]
-    titles = {
-        "F1": "Homogeneous condensation threshold",
-        "F2": "Condensate and reservoir relaxation",
-        "F3": "Spatial structure under localized pumping",
-        "F4": "Particle flow and condensate phase",
-        "F5": "Momentum distributions and domain-size comparison",
-        "F6": "Linear condensation thresholds for localized pumps",
-        "F7": "Numerical convergence and finite-domain effects",
-    }
-    for path in paths:
-        number = path.stem.split("_")[0]
-        captions.extend([f"## Figure {number[1:]}. {titles[number]}", "",
-            (out/f"{path.stem}.caption.txt").read_text().strip(), ""])
-    (out/"figure_captions.md").write_text("\n".join(captions), encoding="utf-8")
     def source_path(source):
         if source is None:
             return None
