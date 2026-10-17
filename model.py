@@ -184,3 +184,66 @@ def solve_0d_reference(config, pump, psi0, nr0, times):
     if not result.success:
         raise RuntimeError(result.message)
     return result.y[0]+1j*result.y[1], result.y[2]
+
+
+
+def condensed_eigenvalues_0d(s, config):
+    """Density–reservoir eigenvalues on the nonzero branch, s = P/Pth > 1."""
+    s = np.asarray(s, dtype=float)
+    if np.any(s <= 1):
+        raise ValueError("The nonzero branch requires s > 1")
+    p = parameters(config)
+    discriminant = p["gammaR"]**2*s**2-4*p["gammaC"]*p["gammaR"]*(s-1)
+    root = np.sqrt(discriminant+0j)
+    return -p["gammaR"]*s/2+root/2, -p["gammaR"]*s/2-root/2
+
+
+def reduced_stationary_0d(pump, config, approximation="adiabatic"):
+    """Physical stationary densities for the two homogeneous reductions."""
+    p = parameters(config)
+    if approximation not in ("adiabatic", "stuart_landau"):
+        raise ValueError("Unknown homogeneous reduction")
+    if pump <= p["Pth0D"]:
+        return 0.0, pump/p["gammaR"]
+    if approximation == "adiabatic":
+        return stationary_0d(pump, config)["condensed"]
+    sl = stuart_landau(pump, config)
+    return sl["mu"]/sl["beta"], p["nRth"]
+
+
+def solve_0d_reduced(config, pump, psi0, times, approximation="adiabatic"):
+    """Integrate the exact adiabatic or cubic complex-field equation.
+
+    The returned reservoir is algebraically reconstructed. For Stuart–Landau
+    it is the first-order expansion P/gammaR * (1 - R*nC/gammaR), consistent
+    with the cubic field equation; it is not an independently evolved field.
+    """
+    p = parameters(config)
+    if p["gammaR"] <= 0:
+        raise ValueError("Reservoir elimination requires gammaR > 0")
+    if approximation not in ("adiabatic", "stuart_landau"):
+        raise ValueError("Unknown homogeneous reduction")
+    sl = stuart_landau(pump, config)
+    def rhs(_t, state):
+        psi = complex(state[0], state[1])
+        nc = abs(psi)**2
+        if approximation == "adiabatic":
+            nr = pump/(p["gammaR"]+p["R"]*nc)
+            growth = (p["R"]*nr-p["gammaC"])/2
+            omega = phase_frequency_0d(nc, nr, pump, config)
+        else:
+            growth = sl["mu"]-sl["beta"]*nc
+            omega = sl["omega0"]+sl["nu"]*nc
+        dpsi = (growth-1j*omega)*psi
+        return [dpsi.real, dpsi.imag]
+    psi0 = complex(psi0)
+    times = np.asarray(times, dtype=float)
+    result = solve_ivp(rhs, (float(times[0]), float(times[-1])),
+        [psi0.real, psi0.imag], t_eval=times, rtol=2e-11, atol=2e-13, method="DOP853")
+    if not result.success:
+        raise RuntimeError(result.message)
+    psi = result.y[0]+1j*result.y[1]
+    nc = abs(psi)**2
+    nr = (pump/(p["gammaR"]+p["R"]*nc) if approximation == "adiabatic"
+          else pump/p["gammaR"]*(1-p["R"]*nc/p["gammaR"]))
+    return psi, nr

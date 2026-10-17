@@ -1,0 +1,131 @@
+% Included after Appendix A of the English report. Requires amsmath and amssymb.
+\numberwithin{equation}{section}
+\section{Fourier-space equations and the split-step algorithm}\label{sec:B}
+
+\subsection{What changes under a Fourier transform}\label{sec:B.1}
+With the Fourier convention of Eq.~\eqref{eq:32}, spatial differentiation gives
+\(\mathcal F[\nabla_\perp^2\psi]=-k^2\widetilde\psi\), where
+\(k^2=k_x^2+k_y^2\). Transforming the full equations gives
+\begin{align}
+\partial_t\widetilde\psi={}&-\frac{iKk^2}{\hbar}\widetilde\psi
+-\frac{\gamma_C}{2}\widetilde\psi
++\frac{R}{2}\mathcal F[n_R\psi]\notag\\
+&-\frac{i}{\hbar}\left(g_C\mathcal F[|\psi|^2\psi]
++g_R\mathcal F[(n_R+\eta P)\psi]\right),\label{eq:B.field}\\
+\partial_t\widetilde n_R={}&\widetilde P-\gamma_R\widetilde n_R
+-R\mathcal F[n_R|\psi|^2].\label{eq:B.reservoir}
+\end{align}
+Only the kinetic term is diagonal in wave vector. Products in real space
+become convolutions in Fourier space, so the full evolution does not reduce
+to independent equations for each wave vector. The implementation therefore
+uses Fourier space for kinetic evolution and real space for the local terms.
+
+\subsection{Kinetic half-steps}\label{sec:B.2}
+During the kinetic substep, the field obeys
+\begin{equation}
+\begin{aligned}
+\partial_t\widetilde\psi&=-\frac{iKk^2}{\hbar}\widetilde\psi,\\
+\widetilde\psi(t+\tau)&=e^{-iKk^2\tau/\hbar}\widetilde\psi(t),
+\qquad \partial_t n_R=0.
+\end{aligned}\label{eq:B.kinetic}
+\end{equation}
+The exact discrete kinetic map is therefore
+\begin{equation}
+\mathcal T_\tau\psi=
+\operatorname{IFFT2}\!\left[
+e^{-iK(k_x^2+k_y^2)\tau/\hbar}
+\operatorname{FFT2}(\psi)\right].\label{eq:B.kinetic-map}
+\end{equation}
+Let \(\mathcal L_\tau\) denote the local, coupled field--reservoir
+evolution defined below. One implemented Strang step is
+\begin{equation}
+\begin{aligned}
+(\psi^{(1)},n_R^{(1)})&=(\mathcal T_{\Delta t/2}\psi^n,n_R^n),\\
+(\psi^{(2)},n_R^{(2)})&=\mathcal L_{\Delta t}
+(\psi^{(1)},n_R^{(1)}),\\
+(\psi^{n+1},n_R^{n+1})&=(\mathcal T_{\Delta t/2}\psi^{(2)},n_R^{(2)}).
+\end{aligned}\label{eq:B.strang}
+\end{equation}
+Thus, each kinetic half-step performs FFT, multiplication by the phase
+factor, and inverse FFT. The ordering is a kinetic half-step, a full local
+step, and a second kinetic half-step. It is not a static-potential update:
+the local coefficients change with the evolving field and reservoir.
+
+\subsection{Local evolution}\label{sec:B.3}
+At each real-space node, the local substep solves
+\begin{equation}
+\begin{aligned}
+\dot\psi&=\left[\frac{Rn_R-\gamma_C}{2}
+-\frac{i}{\hbar}\bigl(g_C|\psi|^2+g_R(n_R+\eta P)\bigr)\right]\psi,\\
+\dot n_R&=P-(\gamma_R+R|\psi|^2)n_R.
+\end{aligned}\label{eq:B.local}
+\end{equation}
+Write this system as \(\dot Y=f(Y;P)\), with
+\(Y=(\operatorname{Re}\psi,\operatorname{Im}\psi,n_R)^T\).
+For the nonlinear condensate--reservoir calculations, the local map is evaluated by a fourth-order Runge--Kutta step:
+\begin{equation}
+\begin{aligned}
+a_1&=f(Y;P),& a_2&=f(Y+\tfrac{\Delta t}{2}a_1;P),\\
+a_3&=f(Y+\tfrac{\Delta t}{2}a_2;P),& a_4&=f(Y+\Delta t\,a_3;P),\\
+Y_{\mathrm{out}}&=Y+\frac{\Delta t}{6}(a_1+2a_2+2a_3+a_4).
+\end{aligned}\label{eq:B.rk4}
+\end{equation}
+The density \(n_C=|\psi|^2\) and the reservoir-dependent coefficients
+are recomputed at each stage; \(n_C\) is not integrated as a separate
+variable. Nodes evolve independently only within this local substep.
+The kinetic substeps connect the spatial field. Although the kinetic map
+is exact for the discrete Fourier modes and the local solver is fourth
+order, the complete splitting scheme is second order in time.
+
+
+For the linear threshold search, the reservoir is instead frozen at
+\(n_{R,0}=P/\gamma_R\), and the cubic field term is omitted, as in
+Eq.~\eqref{eq:36}. The local coefficient is then time-independent,
+so the local step is evaluated by an exact exponential rather than RK4:
+\begin{equation}\label{eq:B.linear-local}
+\psi_{\mathrm{out}}=\exp\!\left\{\Delta t\left[
+\frac{RP/\gamma_R-\gamma_C}{2}
+-\frac{i g_R}{\hbar}\left(\frac{P}{\gamma_R}+\eta P\right)
+\right]\right\}\psi_{\mathrm{in}}.
+\end{equation}
+The same kinetic half-steps surround this local step. The exponential
+is exact only for the frozen-reservoir local problem; splitting the
+spatial operators still gives a second-order scheme.
+
+\subsection{Spatial grids and their checks}\label{sec:B.4}
+The field \(\psi\) and reservoir density \(n_R\) occupy the same uniform,
+periodic Cartesian grid. The pump is a fixed array on this grid, and
+\(n_C\) is computed pointwise. For the even grid sizes used here, coordinates and FFT wave vectors are
+\begin{equation}
+\begin{aligned}
+x_j&=-\frac{L_x}{2}+j\Delta x,
+&\Delta x&=\frac{L_x}{N_x},\quad j=0,\ldots,N_x-1,\\
+y_l&=-\frac{L_y}{2}+l\Delta y,
+&\Delta y&=\frac{L_y}{N_y},\quad l=0,\ldots,N_y-1,\\
+k_{x,m}&=\frac{2\pi m}{L_x},
+&m&=0,\ldots,\frac{N_x}{2}-1,-\frac{N_x}{2},\ldots,-1,
+\end{aligned}\label{eq:B.grid}
+\end{equation}
+with the analogous ordering for \(k_y\). The upper spatial endpoint is
+not repeated. The FFT normalization cancels between the forward and
+inverse transforms in Eq.~\eqref{eq:B.kinetic-map}.
+
+\begin{center}
+\small\begin{tabular}{lrrrr}
+\hline
+Calculation & Grid & \(L\) (\(\mu\mathrm m\)) & \(\Delta x\) (\(\mu\mathrm m\)) & \(\Delta t\) (ps)\\
+\hline
+Nonlinear spot & \(512^2\) & 256 & 0.5 & 0.025\\
+Nonlinear ring & \(512^2\) & 256 & 0.5 & 0.05\\
+Linear threshold scan & \(128^2\) & 128 & 1 & 0.05\\
+\hline
+\end{tabular}
+\end{center}
+For the main nonlinear runs, the pump scale \(d=2.5\,\mu\mathrm m\)
+spans five spatial steps, and the domain is much larger than the pumped
+region. These scale comparisons motivate the grid but do not establish
+accuracy by themselves. Grid, time-step, boundary, and spectral checks
+are summarized in Appendix~\ref{sec:A.4}. The linear threshold endpoints are also
+checked on a \(256^2\) grid at \(L=128\,\mu\mathrm m\) and a
+\(192^2\) grid at \(L=192\,\mu\mathrm m\). Spatial resolution and
+domain size are separate checks.

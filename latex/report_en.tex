@@ -1,0 +1,854 @@
+% Compile from this directory: latexmk -pdf report_en.tex
+
+\documentclass[12pt,a4paper]{article}
+\usepackage{cmap}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx,float,booktabs,geometry,array}
+\usepackage[justification=raggedright,singlelinecheck=false]{caption}
+\usepackage[expansion=false]{microtype}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\geometry{margin=2.2cm}
+\setlength{\emergencystretch}{2em}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+\graphicspath{{../results/report_figures/}}
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+\newcommand{\reportfigure}[3]{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{#1}
+\caption{#2}
+\label{#3}
+\end{figure}
+}
+\title{Dynamics and spatial structure of exciton-polariton condensates under nonresonant pumping}
+\author{Korostelev Nikita}
+\date{}
+\begin{document}
+\maketitle
+\clearpage
+
+
+\clearpage
+
+\clearpage
+
+\clearpage
+
+\clearpage
+
+\section{Aim of the study}\label{sec:1}
+
+The previous report considered the dispersion and modes of a polariton microcavity. Here, we study the dynamics of a condensate under nonresonant pumping: its onset, relaxation, and spatial structure.
+
+The main questions are how particle exchange with the reservoir determines the threshold and relaxation time, when the reservoir can be eliminated from the dynamical description, and how the pump profile affects the density, particle currents, and circulation. We first examine a spatially homogeneous system and its reduced models, and then consider two-dimensional dynamics under Gaussian and ring-shaped pumping.
+
+We use the model and parameters of Alyatkin et al. (2024) \cite{ref3}, with simpler pump profiles. The parameters of the microcavity considered in the previous report are not recalculated, and the experimental geometry of Ref. \cite{ref3} is not reproduced.
+
+\clearpage
+
+\section{Physical model and parameters}\label{sec:2}
+
+\subsection{Condensate field and reservoir}\label{sec:2.1}
+
+The dynamical variables are:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $\psi(r,t)$: the complex condensate field, normalized so that $n_{C}=|\psi|^2$. Its spatial phase determines the particle current, while its temporal phase determines the field frequency.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $n_{R}(r,t)$: the density of the active incoherent reservoir, which feeds the condensate through stimulated scattering. The reservoir is described by its population, without a separate coherent phase.\end{itemize}
+
+Here $r=(x,y)$ is the position in the microcavity plane. We use a single-component field $\psi$ and a single reservoir density, without resolving the polariton spin components.
+
+Stationarity of the density and stationarity of the complex field are treated separately: a steady regime may have $\psi(r,t)=\psi_{0}(r)\exp(-i \Omega t)$.
+
+\subsection{Model equations: meaning and origin of the terms}\label{sec:2.2}
+
+We use the open-dissipative Gross--Pitaevskii model of Wouters and Carusotto (2007) \cite{ref1}, with the parametrization of Alyatkin et al. (2024) \cite{ref3}:
+
+\begin{equation}\label{eq:1}
+\begin{aligned}
+i\hbar\frac{\partial\psi}{\partial t}
+&=\left[-\frac{\hbar^2}{2m}\nabla_\perp^2
++g_C|\psi|^2+g_R(n_R+\eta P)\right.\\
+&\qquad\left.+\frac{i\hbar}{2}(Rn_R-\gamma_C)\right]\psi ,
+\end{aligned}\end{equation}
+
+\begin{equation}\label{eq:2}
+\frac{\partial n_R}{\partial t}=P(\mathbf r)-\gamma_R n_R-Rn_R|\psi|^2.\end{equation}
+
+The first equation describes the condensate field, and the second describes the reservoir population. The pump $P(r)$ is time-independent in the calculations considered here. The operator $\nabla_\perp^{2}=\partial_{x}^{2}+\partial_{y}^{2}$ accounts for spatial variations in the two-dimensional plane.
+
+The terms in Eq.~\eqref{eq:1} have the following meanings:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item -$(\hbar^{2}/2m) \nabla_\perp^{2}$ is the kinetic operator associated with the parabolic dispersion $E(k)=\hbar^{2} k^{2}/(2m)$ near the minimum of the lower polariton branch. Substituting $k\to{}-i \nabla$ gives the Laplacian and the minus sign. Acting on a plane wave, the operator gives the positive energy $\hbar^{2} k^{2}/(2m)$.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $g_{C}|\psi|^2=g_{C} n_{C}$ is the energy shift due to polariton interactions in the mean-field approximation. A local pair interaction gives an energy density $(g_{C}/2)n_{C}^{2}$; its derivative with respect to $n_{C}$ is $g_{C} n_{C}$. This produces the cubic term $g_{C}|\psi|^2 \psi$ in the field equation. The interaction is repulsive for $g_{C}>0$.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $g_{R} n_{R}$ is the condensate energy shift due to the active reservoir. In the local approximation used here, the interaction energy per unit area is $g_{R} n_{C} n_{R}$, so the energy required to add one condensate particle is shifted by $g_{R} n_{R}$. Positive $g_{R}$ gives a repulsive potential in regions of high reservoir density.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $g_{R} \eta P$ is an additional blueshift from background dark excitons in the parametrization of Alyatkin et al. (2024) \cite{ref3}. Their contribution is represented by an effective density $n_{\mathrm{bg}}=\eta P$, proportional to the prescribed pump; $\eta$ therefore has units of time. This is a phenomenological description of the background, without a separate dynamical equation or a contribution to the gain $R n_{R}$.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item +(i $\hbar/2$)$R n_{R}$ describes stimulated gain. The influx into the condensate is proportional to $R n_{R} n_{C}$, depending on both the available reservoir particles and the condensate population. Since $n_{C}=|\psi|^2$, the corresponding amplitude growth rate is $R n_{R}/2$. Multiplying the amplitude equation by i $\hbar$ gives this term in Eq.~\eqref{eq:1}.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item -(i $\hbar/2$)$\gamma_{C}$ describes losses at a constant population decay rate. The law d $n_{C}/dt=-\gamma_{C} n_{C}$ corresponds to $\psi\propto\exp(-\gamma_{C} t/2)$, which explains the factor 1/2 and the negative imaginary energy shift.\end{itemize}
+
+The distinction between energy shifts and gain becomes clear after dividing Eq.~\eqref{eq:1} by i $\hbar$. A real local shift $V$ gives d $\psi/dt=-i V \psi/\hbar$ and changes the phase; an imaginary term i $\hbar$ G/2 gives d $\psi/dt=$G $\psi/2$ and changes the amplitude. Here G=$R n_{R}-\gamma_{C}$. In addition to phase evolution, the kinetic operator produces spatial redistribution of the density.
+
+The reservoir equation~\eqref{eq:2} contains the following particle-exchange terms:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item +$P(r)$ is the prescribed reservoir injection rate. The pumping is nonresonant, so the source enters the population equation rather than acting as a coherent drive of $\psi$.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $-\gamma_{R} n_{R}$ describes linear reservoir losses, assuming a constant probability of particle loss per unit time.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $-R n_{R}|\psi|^2=-R n_{R} n_{C}$ describes the transfer of reservoir particles into the condensate. The same process gives the positive term +$R n_{R} n_{C}$ in the condensate density equation. Using the same coefficient ensures particle balance between the two components.\end{itemize}
+
+The reservoir therefore has two roles: it supplies particles to the condensate and produces a repulsive energy shift. As a result, the maximum condensate density need not coincide with the pump maximum.
+
+\subsection{Continuity equation}\label{sec:2.3}
+
+To obtain the density equation from the field equation, we use
+
+\[
+\frac{\partial n_C}{\partial t}=\psi^*\frac{\partial\psi}{\partial t}+\psi\frac{\partial\psi^*}{\partial t}.
+\]
+
+After substituting Eq.~\eqref{eq:1}, the real local energy terms cancel, gain and losses give a density source, and the kinetic term gives the divergence of the current:
+
+\begin{equation}\label{eq:3}
+\frac{\partial n_C}{\partial t}+\nabla\cdot\mathbf j=(Rn_R-\gamma_C)n_C,\end{equation}
+
+\begin{equation}\label{eq:4}
+\mathbf j=\frac{\hbar}{m}\operatorname{Im}(\psi^*\nabla\psi).\end{equation}
+
+The density thus changes through both local particle exchange and transport. Even with positive local gain, an outward current can reduce the density in a given region. In a homogeneous system, $\nabla\!\cdot(j)=0$, and the growth condition reduces to $R n_{R}>\gamma_{C}$.
+
+\subsection{Units, constants, and parameters}\label{sec:2.4}
+
+Lengths are measured in $\mu\mathrm m$, time in $\mathrm{ps}$, and energy in $\mathrm{meV}$. Since the densities are two-dimensional, $n_{C}$ and $n_{R}$ have units of $\mu\mathrm m^{-2}$, $\psi$ has units of $\mu\mathrm m^{-1}$, and $P$ has units of $\mu\mathrm m^{-2} \mathrm{ps}^{-1}$.
+
+The model parameters are:
+
+\begin{center}\small\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.43\textwidth}}\toprule
+\textbf{Symbol} & \textbf{Value} & \textbf{Physical meaning}\\\midrule
+$\hbar$ & $0.6582 \mathrm{meV} \mathrm{ps}$ & Reduced Planck constant\\
+$m$ & $5.63\times 10^{-5} m_{e}$ & Effective mass; $m_{e}$ is the electron mass\\
+$g_{C}$ & $0.0024 \mathrm{meV} \mu\mathrm m^{2}$ & Condensate interaction strength\\
+$g_{R}$ & $0.0048 \mathrm{meV} \mu\mathrm m^{2}$ & Reservoir-induced energy shift coefficient\\
+$R$ & $0.021 \mu\mathrm m^{2} \mathrm{ps}^{-1}$ & Stimulated scattering coefficient\\
+$\gamma_{C}$ & $0.182 \mathrm{ps}^{-1}$ & Condensate loss rate\\
+$\gamma_{R}$ & $0.050 \mathrm{ps}^{-1}$ & Reservoir loss rate\\
+$\eta$ & $9.8 \mathrm{ps}$ & Background density $n_{\mathrm{bg}}=\eta P$; $\eta \gamma_{R}=0.49$\\
+\bottomrule\end{tabular}\end{center}
+
+The characteristic loss times are 1/$\gamma_{C}=5.49 \mathrm{ps}$ and 1/$\gamma_{R}=20 \mathrm{ps}$. These are the population decay times without replenishment. They do not imply that the condensate necessarily reaches a steady regime within $5\text{--}20\,\mathrm{ps}$: relaxation can be much slower near the threshold.
+
+For the kinetic energy, it is convenient to introduce $K=\hbar^{2}/(2m)\simeq0.677 \mathrm{meV} \mu\mathrm m^{2}$. A plane wave with wave vector $k$ then has energy $K k^{2}$. This notation will be used when discussing momentum-space distributions.
+
+The parameters are based on the phenomenological model and estimates of Alyatkin et al. (2024) \cite{ref3}. They were not all determined by independent direct measurements: in particular, $R$ was adjusted within the model, while $g_{R}=2g_{C}$ is the assumed relation between the interaction coefficients. This should be kept in mind when comparing the calculations with experiment.
+
+\subsection{Derivation of the homogeneous threshold \texorpdfstring{$P_{\rm th}$}{Pth}}\label{sec:2.5}
+
+The threshold can be understood before solving the full steady-state problem. Consider a spatially uniform pump $P$ when the condensate density is still negligible, $n_{C}\simeq0$.
+
+\noindent 1) When the condensate removes almost no particles from the reservoir, steady injection balances reservoir losses: $P=\gamma_{R} n_{R}$. Hence $n_{R}=P/\gamma_{R}$.
+
+\noindent 2) The boundary between decay and growth of a small field amplitude is given by gain--loss balance: $R n_{R}=\gamma_{C}$.
+
+\noindent 3) Substituting $n_{R}=P/\gamma_{R}$ gives $R P/\gamma_{R}=\gamma_{C}$, or
+
+\begin{equation}\label{eq:5}
+P_{\rm th}=\frac{\gamma_C\gamma_R}{R}=0.433333\ldots\;\mu\mathrm m^{-2}\,\mathrm{ps}^{-1},\end{equation}
+
+Equation~\eqref{eq:5} applies to a homogeneous system. Under localized pumping, the threshold also depends on the spatial mode profile and its extension beyond the gain region; this problem is considered in Section~\ref{sec:8}.
+
+We define $s=P/P_{\mathrm{th}}$ as the homogeneous pump strength in threshold units. For a localized profile, we write $P(r)=P_{0} P_{\mathrm{th}} f(r)$, with max f=1. Here $P_{0}$ is the dimensionless peak pump strength, not the total pump power.
+
+\clearpage
+
+\section{Spatially homogeneous steady states and stability}\label{sec:3}
+
+\subsection{From the complex field to two densities}\label{sec:3.1}
+
+We first consider a uniform pump with all quantities identical at every point in the plane. The spatial derivatives vanish, so particle transport between different regions does not affect the dynamics. Only exchange between the reservoir and condensate remains.
+
+The condensate density equation has already been obtained as Eq.~\eqref{eq:3}. With no spatial gradients, $\nabla\!\cdot(j)=0$, giving
+
+\begin{equation}\label{eq:6}
+\frac{\mathrm dn_C}{\mathrm dt}=(Rn_R-\gamma_C)n_C,\end{equation}
+
+The reservoir equation retains its form:
+
+\begin{equation}\label{eq:7}
+\frac{\mathrm dn_R}{\mathrm dt}=P-\gamma_R n_R-Rn_Rn_C.\end{equation}
+
+These equations describe a feedback loop. A sufficiently large reservoir makes $R n_{R}-\gamma_{C}$ positive and causes condensate growth. This growth increases particle transfer out of the reservoir through the last term in Eq.~\eqref{eq:7}. The gain therefore cannot remain fixed indefinitely: reservoir depletion limits the increase in density.
+
+The two equations describe the populations. The field phase does not enter them because local energy shifts do not directly change $n_{C}$.
+
+\subsection{Finding the steady states}\label{sec:3.2}
+
+We set the right-hand sides of Eqs.~\eqref{eq:6}--\eqref{eq:7} to zero. The condition $(R n_{R}-\gamma_{C})n_{C}=0$ gives two branches: $n_{C}=0$ and a nonzero branch with $R n_{R}=\gamma_{C}$.
+
+Condensate-free branch. Setting $n_{C}=0$ in the reservoir equation gives $P-\gamma_{R} n_{R}=0$, so
+
+\begin{equation}\label{eq:8}
+n_C^{(0)}=0,\qquad n_R^{(0)}=\frac{P}{\gamma_R}.\end{equation}
+
+This solution exists mathematically for every $P$. At sufficiently strong pumping, however, it becomes unstable: a small nonzero condensate seed begins to grow.
+
+Condensed branch. For $n_{C}>0$, we require $R n_{R}=\gamma_{C}$. The reservoir density is therefore fixed by the condition that condensate gain exactly compensates condensate losses:
+
+\[
+n_R^*=\frac{\gamma_C}{R}.
+\]
+
+Substitution into the steady reservoir equation gives
+
+\[
+0=P-\gamma_R\frac{\gamma_C}{R}-\gamma_C n_C^*.
+\]
+
+Using $P_{\mathrm{th}}$ from Eq.~\eqref{eq:5}, we obtain
+
+\begin{equation}\label{eq:9}
+n_R^*=\frac{\gamma_C}{R},\qquad n_C^*=\frac{P-P_{\rm th}}{\gamma_C},\qquad P>P_{\rm th}.\end{equation}
+
+For $P<P_{\mathrm{th}}$, this expression would give a negative condensate density and is therefore unphysical. A physically admissible nonzero solution appears above the threshold.
+
+In terms of $s=P/P_{\mathrm{th}}$,
+
+\begin{equation}\label{eq:10}
+n_C^*=\frac{\gamma_R}{R}(s-1),\qquad n_R^*=\frac{\gamma_C}{R},\end{equation}
+
+For the chosen parameters, $\gamma_{R}/R=2.38095 \mu\mathrm m^{-2}$ and $\gamma_{C}/R=8.66667 \mu\mathrm m^{-2}$. Above the threshold, the condensate density increases linearly with $s$, while the active reservoir density remains constant. This is reservoir clamping: in the steady state, additional pumping mainly increases $n_{C}$.
+
+A stationary density does not imply a time-independent complex field. For $n_{C}^{*}>0$,
+
+\[
+\psi(t)=\sqrt{n_C^*}\exp[-i\omega_*t+i\varphi_0],
+\]
+
+\begin{equation}\label{eq:11}\hbar\omega_*=g_Cn_C^*+g_R(n_R^*+\eta P).\end{equation}
+
+Here $\varphi_{0}$ is an arbitrary initial phase and $\omega_{*}$ is its rotation frequency. The energy $\hbar \omega_{*}$ is measured relative to the reference energy of the model; it is not the full optical energy of the polariton resonance.
+
+\subsection{Origin and role of the Jacobian matrix}\label{sec:3.3}
+
+To determine whether the system returns to a steady state after a small perturbation, we linearize the density equations.
+
+Write their right-hand sides as
+
+\[
+\begin{aligned}F_C(n_C,n_R)&=(Rn_R-\gamma_C)n_C,\\F_R(n_C,n_R)&=P-\gamma_R n_R-Rn_Rn_C.\end{aligned}
+\]
+
+Let $(n_{C}^{*},n_{R}^{*})$ be the selected stationary point, with small deviations $\delta n_{C}$ and $\delta n_{R}$:
+
+\[
+\begin{aligned}n_C(t)&=n_C^*+\delta n_C(t),\\n_R(t)&=n_R^*+\delta n_R(t).\end{aligned}
+\]
+
+Substitute these expressions into $F_{C}$ and $F_{R}$ and retain terms linear in the deviations. The constant terms vanish because $F_{C}=F_{R}=0$ at the stationary point; products of two small deviations are neglected. This gives
+
+\[
+\frac{\mathrm d}{\mathrm dt}\begin{pmatrix}\delta n_C\\\delta n_R\end{pmatrix}=J\begin{pmatrix}\delta n_C\\\delta n_R\end{pmatrix}.
+\]
+
+The entries of $J$ are the partial derivatives of the right-hand sides with respect to $n_{C}$ and $n_{R}$. For example, $\partial F_{C}/\partial n_{R}=R n_{C}$ measures how a reservoir change affects the condensate growth rate. The four derivatives give
+
+\begin{equation}\label{eq:12}
+J(\mathbf u)=\begin{pmatrix}Rn_R-\gamma_C&Rn_C\\-Rn_R&-\gamma_R-Rn_C\end{pmatrix}.\end{equation}
+
+where $u=(n_{C},n_{R})^T$. For stability analysis, $J$ is evaluated at the stationary point under consideration.
+
+We seek perturbations of the form $\delta n(t)=v \exp(\lambda t)$, with a constant vector v. Substitution gives $J v=\lambda v$, so $\lambda$ is an eigenvalue of $J$. A negative real part means decay of the corresponding perturbation; a positive real part means growth. A zero real part requires further analysis.
+
+\subsection{Stability of the condensate-free state}\label{sec:3.4}
+
+For Eq.~\eqref{eq:8}, $n_{C}=0$ and $n_{R}=P/\gamma_{R}$. Substituting these values into Eq.~\eqref{eq:12} gives a triangular matrix:
+
+\[
+J_0=\begin{pmatrix}RP/\gamma_R-\gamma_C&0\\-RP/\gamma_R&-\gamma_R\end{pmatrix}.
+\]
+
+Its eigenvalues are the diagonal entries. Using $s=P/P_{\mathrm{th}}$,
+
+\begin{equation}\label{eq:13}
+\lambda_C=\gamma_C(s-1),\qquad\lambda_R=-\gamma_R.\end{equation}
+
+The reservoir eigenvalue is always negative. Indeed, substituting $n_{R}=P/\gamma_{R}+\delta n_{R}$ into the reservoir equation at $n_{C}=0$ gives $\delta \dot n_R=-\gamma_{R} \delta n_{R}$. The pump sets the equilibrium density but does not change this decay rate.
+
+The condensate eigenvalue changes sign at $s=1$:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item For $s<1$, a small condensate density decays, and the condensate-free branch is stable against the homogeneous perturbations considered here.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item For $s>1$, the perturbation grows, and the condensate-free branch is unstable.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item At $s=1$, the linear growth rate vanishes, reproducing the gain--loss threshold derived earlier.\end{itemize}
+
+Figure~\ref{fig:1}(b) shows max$(\lambda_{C},\lambda_{R})$, the larger of the two eigenvalues. For the chosen parameters, this is max[0.182$(s-1)$,-0.050] $\mathrm{ps}^{-1}$. At weak pumping, the larger value is the constant $-\gamma_{R}=-0.050 \mathrm{ps}^{-1}$, corresponding to the more slowly decaying reservoir mode. The curve begins to rise when the two eigenvalues cross at $s=1-\gamma_{R}/\gamma_{C}\simeq0.725$. This change of slope is not an additional condensation threshold; the instability threshold is the zero crossing at $s=1$. Above that point, the curve still describes the condensate-free branch, not the condensed branch.
+
+Field growth and density growth must be distinguished. If $\psi$ grows as $\exp(\sigma t)$, then $|\psi|^2$ grows as $\exp(2 \sigma t)$. The density exponent $\lambda_{C}$ is therefore twice the corresponding field-amplitude growth rate. This distinction will be used for the two-dimensional thresholds in Section~\ref{sec:8}.
+
+\reportfigure{01_homogeneous_threshold.png}{Homogeneous condensation threshold and stability of the condensate-free branch. (a) Stationary $n_{C}$ and $n_{R}$ versus $s=P/P_{\mathrm{th}}$; above $s=1$, $n_{C}$ increases linearly and $n_{R}$ is clamped. (b) The largest eigenvalue of the two-density Jacobian on the condensate-free branch. Its constant segment is $-\gamma_{R}$; the change of slope near $s=0.725$ marks an eigenvalue crossing, while the dashed line marks the analytical instability threshold $s=1$.}{fig:1}
+
+\subsection{Stability of the condensed branch and oscillatory relaxation}\label{sec:3.5}
+
+On the condensed branch, $R n_{R}^{*}=\gamma_{C}$ and $R n_{C}^{*}=\gamma_{R}(s-1)$, so the Jacobian becomes
+
+\[
+J_*=\begin{pmatrix}0&\gamma_R(s-1)\\-\gamma_C&-\gamma_Rs\end{pmatrix}.
+\]
+
+The feedback is visible in the off-diagonal entries: increasing the reservoir density increases condensate growth, while increasing the condensate density accelerates reservoir depletion.
+
+The eigenvalues follow from det$(J_{*}-\lambda I)=0$:
+
+\[
+\lambda^2+\gamma_Rs\lambda+\gamma_C\gamma_R(s-1)=0.
+\]
+
+Solving this quadratic equation gives
+
+\begin{equation}\label{eq:14}
+\lambda_\pm=-\frac{\gamma_Rs}{2}\pm\frac12\sqrt{\gamma_R^2s^2-4\gamma_C\gamma_R(s-1)}.\end{equation}
+
+Both modes have negative real parts for $s>1$. This also follows from the negative trace, $-\gamma_{R} s$, and positive determinant, $\gamma_{C} \gamma_{R}(s-1)$. The nonzero branch is therefore linearly stable against small spatially homogeneous density perturbations. This does not establish stability against arbitrary two-dimensional field perturbations.
+
+The relaxation depends on the discriminant in Eq.~\eqref{eq:14}:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item A positive discriminant gives real eigenvalues and nonoscillatory decay of the linear perturbations.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item A negative discriminant gives a complex-conjugate pair and damped population oscillations.\end{itemize}
+
+For the chosen parameters, the oscillatory interval is approximately $1.0801<s<13.4799$. At $s=1.5$, for example,
+
+\begin{equation}\label{eq:15}
+\lambda_\pm=-0.0375\pm0.0561\,i\;\mathrm{ps}^{-1}.\end{equation}
+
+The value $0.0375 \mathrm{ps}^{-1}$ is the decay rate of small perturbations, and $0.0561 \mathrm{ps}^{-1}$ is their angular oscillation frequency. The oscillations arise from delayed feedback: condensate growth reduces the reservoir density and weakens gain, after which pumping replenishes the reservoir. The discriminant in Eq.~\eqref{eq:14} separates oscillatory and nonoscillatory relaxation.
+
+Figure~\ref{fig:2}(a) shows the real and imaginary parts of the eigenvalues. Figure~\ref{fig:2}(b) shows the numerical trajectory $(n_{C}(t),n_{R}(t))$ at $s=1.5$. This is a phase-space trajectory of the two densities, not a plot of the optical phase of $\psi$. It illustrates their joint approach to the stationary point.
+
+The common phase of the complex field is absent from Eqs.~\eqref{eq:6}--\eqref{eq:7}. An arbitrary constant phase shift does not change the densities and corresponds to a separate neutral phase mode. The eigenvalues given here describe density perturbations only.
+
+\reportfigure{02_condensed_state_stability.png}{Stability and relaxation of the homogeneous condensed branch. (a) Real and imaginary parts of the two eigenvalues of the condensate-density--reservoir system for $s>1$; complex eigenvalues correspond to damped population oscillations. (b) The trajectory $(n_{C},n_{R})$ at $s=1.5$, showing the direction of time, initial point, and stationary point. The global phase mode is not included.}{fig:2}
+
+\clearpage
+
+\section{Homogeneous dynamics and reduced models}\label{sec:4}
+
+Steady-state solutions do not determine the transient dynamics. Models with the same final densities can predict different growth times, density overshoots, and damped oscillations. Here, the full system is compared with two successive reductions: adiabatic elimination of the reservoir and a subsequent cubic expansion in the field.
+
+The first reduction removes the finite response time of the reservoir; the second also approximates gain saturation. Their validity conditions and errors are considered separately.
+
+\subsection{Adiabatic elimination of the reservoir}\label{sec:4.1}
+
+Collecting the reservoir losses in Eq.~\eqref{eq:7} gives
+
+\[
+\frac{\mathrm dn_R}{\mathrm dt}=P-(\gamma_R+Rn_C)n_R.
+\]
+
+If $n_{C}$ is held fixed over a short interval, the reservoir approaches the value at which the right-hand side vanishes:
+
+\begin{equation}\label{eq:16}
+n_R^{(\rm ad)}(n_C)=\frac{P}{\gamma_R+Rn_C}.\end{equation}
+
+In the adiabatic approximation, the dynamical reservoir equation is replaced by Eq.~\eqref{eq:16}, evaluated at the current $n_{C}$. This assumes that departures from this relation decay before the condensate changes appreciably.
+
+The denominator contains both intrinsic reservoir losses, $\gamma_{R}$, and the transfer rate into the condensate, $R n_{C}$. As the condensate grows, $n_{R}^{\mathrm{ad}}$ and the gain $R n_{R}$ decrease. Gain saturation thus follows from the original particle balance.
+
+To identify the relevant timescale, consider a small reservoir deviation from Eq.~\eqref{eq:16} with $n_{C}$ temporarily fixed. It obeys d$(\delta n_{R})/dt=-(\gamma_{R}+R n_{C})\delta n_{R}$ and decays over the characteristic time
+
+\[
+\tau_R=\frac{1}{\gamma_R+Rn_C}.
+\]
+
+Adiabatic elimination is justified when the condensate density changes little over $\tau_{R}$. If the condensate and reservoir change substantially on comparable timescales, the reservoir response is delayed, and replacing its dynamics by Eq.~\eqref{eq:16} may be inaccurate. An initial reservoir far from Eq.~\eqref{eq:16} also requires an initial adjustment stage.
+
+When $n_{C}$ changes, $n_{R}^{\mathrm{ad}}(n_{C}(t))$ changes as well. Setting the reservoir equation's right-hand side to zero gives its instantaneous equilibrium value; it does not imply that d $n_{R}^{\mathrm{ad}}/dt$ is exactly zero along the entire trajectory.
+
+\subsection{Unexpanded adiabatic model: steady states and dynamics}\label{sec:4.2}
+
+Divide the homogeneous field equation~\eqref{eq:1} by i $\hbar$ and substitute Eq.~\eqref{eq:16} for $n_{R}$. This gives a single equation for the complex field:
+
+\begin{equation}\label{eq:17}
+\begin{aligned}
+\frac{\mathrm d\psi}{\mathrm dt}
+&=\left[\frac12\left(\frac{RP}{\gamma_R+Rn_C}-\gamma_C\right)\right.\\
+&\qquad\left.-\frac{i}{\hbar}\left\{g_Cn_C+
+g_R\left(\frac{P}{\gamma_R+Rn_C}+\eta P\right)\right\}\right]\psi,\\
+n_C&=|\psi|^2 .
+\end{aligned}\end{equation}
+
+The first parenthesis gives the real amplitude growth rate: reservoir gain minus losses. The expression in braces, multiplied by -i/$\hbar$, gives phase evolution through the interaction energy.
+
+The dependence $P/(\gamma_{R}+R n_{C})$ is retained in full, so we call Eq.~\eqref{eq:17} the unexpanded adiabatic model. This step does not require a small $n_{C}$; its validity depends on the reservoir response time.
+
+In a nonzero steady state, the amplitude stops growing, so the real part of the coefficient in Eq.~\eqref{eq:17} vanishes:
+
+\[
+\frac{RP}{\gamma_R+Rn_C}=\gamma_C.
+\]
+
+Solving this equation gives $n_{C}^{*}=(\gamma_{R}/R)(s-1)$, exactly as in the full model. The reservoir density also agrees: $n_{R}^{*}=\gamma_{C}/R$. The condensate-free state is reproduced in the same way.
+
+Agreement of the final densities does not imply agreement of the transient evolution. In the full model, $n_{R}$ is an independent variable with its own initial value and finite response time. In Eq.~\eqref{eq:17}, it is determined entirely by the current $n_{C}$. The reduced model can therefore predict the correct final density while missing a transient overshoot or damped oscillations.
+
+\subsection{Derivation of the Stuart--Landau equation}\label{sec:4.3}
+
+The next step is to approximate the fraction in Eq.~\eqref{eq:16}. Factor $\gamma_{R}$ out of the denominator and introduce $x=R n_{C}/\gamma_{R}$. Then $n_{R}=(P/\gamma_{R})/(1+x)$.
+
+For $x$ much smaller than one, the expansion 1/(1+$x$)=1$-x+O(x^{2})$ gives
+
+\begin{equation}\label{eq:18}
+n_R=\frac{P}{\gamma_R}[1-x+O(x^2)],\qquad x=\frac{Rn_C}{\gamma_R}\ll1.\end{equation}
+
+The condition $x\ll1$ means that the reservoir-to-condensate transfer rate is small compared with the intrinsic reservoir loss rate. By itself, it says nothing about whether the reservoir responds fast enough to follow the condensate. A fast response and weak reservoir depletion are separate requirements.
+
+Substitute Eq.~\eqref{eq:18} into Eq.~\eqref{eq:17} and retain constant terms and terms proportional to $n_{C}=|\psi|^2$ in the coefficient multiplying $\psi$. The result is
+
+\begin{equation}\label{eq:19}
+\frac{\mathrm d\psi}{\mathrm dt}=[\mu-\beta|\psi|^2-i(\omega_0+\nu|\psi|^2)]\psi,\end{equation}
+
+the Stuart--Landau equation for a complex amplitude, with coefficients
+
+\begin{equation}\label{eq:20}
+\begin{aligned}
+\mu&=\frac12\left(\frac{RP}{\gamma_R}-\gamma_C\right),&
+\beta&=\frac{PR^2}{2\gamma_R^2},\\
+\omega_0&=\frac{g_R(P/\gamma_R+\eta P)}{\hbar},&
+\nu&=\frac{g_C-g_RPR/\gamma_R^2}{\hbar}.
+\end{aligned}\end{equation}
+
+Keeping terms through first order in $n_{C}$ in the coefficient of $\psi$ retains terms through $|\psi|^2 \psi$. The next omitted term in the field equation is of order $|\psi|^4 \psi$.
+
+The coefficients have the following meanings:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $\mu$ is the linear growth rate of a weak field amplitude. It is positive above the homogeneous threshold and negative below it.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $\beta>0$ is the gain saturation coefficient. The term $-\beta|\psi|^2$ reduces the growth rate as the density increases.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $\omega_{0}$ is the phase rotation frequency in the weak-field limit, due to the reservoir and background energy shifts.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item $\nu$ gives the change in this frequency with increasing condensate density. It combines the positive condensate interaction shift with the decrease in the reservoir shift as the reservoir density falls.\end{itemize}
+
+Thus, $\hbar \nu$ contains the difference between the condensate interaction contribution and the reduction of the reservoir-induced shift.
+
+Writing $\psi=\sqrt{n_{C}}\exp(i \varphi)$ separates the meanings of the real and imaginary parts of Eq.~\eqref{eq:19}:
+
+\[
+\begin{aligned}\frac{\mathrm dn_C}{\mathrm dt}&=2(\mu-\beta n_C)n_C,\\\frac{\mathrm d\varphi}{\mathrm dt}&=-(\omega_0+\nu n_C).\end{aligned}
+\]
+
+The coefficients $\mu$ and $\beta$ determine density growth and saturation; $\omega_{0}$ and $\nu$ determine phase evolution. The background term $\eta P$ contributes to $\omega_{0}$ but does not change the homogeneous gain threshold. In a spatial problem, however, its energy profile affects the mode shape and can therefore affect the threshold.
+
+Adiabatic elimination requires a fast reservoir response. The cubic expansion additionally requires $R n_{C}/\gamma_{R}\ll1$. These are distinct validity conditions, and neither is automatically satisfied for the chosen parameters. We therefore compare both reductions with the full dynamics. Limitations of the adiabatic description are discussed by Bobrovska and Matuszewski (2015) \cite{ref2}.
+
+\subsection{Steady-state error of the cubic approximation}\label{sec:4.4}
+
+The density equation following Eq.~\eqref{eq:20} gives the nonzero steady-state condition $\mu-\beta n_{C}=0$. Substituting Eq.~\eqref{eq:20} and using $P=s P_{\mathrm{th}}$ yields
+
+\begin{equation}\label{eq:21}
+n_C^{(\rm SL,*)}=\frac{\mu}{\beta}=\frac{\gamma_R}{R}\frac{s-1}{s},\qquad s>1.\end{equation}
+
+The full model gives $n_{C}^{*}=(\gamma_{R}/R)(s-1)$. The additional divisor $s$ in the cubic approximation therefore leads to a lower density above the threshold.
+
+The relative discrepancy from the full steady-state branch is
+
+\begin{equation}\label{eq:22}
+\varepsilon_{\rm ss}^{(\rm SL)}=\frac{|n_C^{(\rm SL,*)}-n_C^*|}{n_C^*}=1-\frac1s,\qquad s>1.\end{equation}
+
+The error is 4.8\% at $s=1.05$, 16.7\% at $s=1.2$, and 33.3\% at $s=1.5$. These values apply to the coefficients obtained by our expansion in Eq.~\eqref{eq:20}; they are not a universal error of all Stuart--Landau models.
+
+The connection with the validity condition is particularly clear in the full model's steady state: $x^{*}=R n_{C}^{*}/\gamma_{R}=s-1$. This parameter is small near the threshold and ceases to be small farther above it. The worsening of the cubic approximation is therefore expected.
+
+For the unexpanded adiabatic model, the steady-state discrepancy is analytically zero because the stationary particle-balance equations are identical. This agreement is not a measure of numerical integration accuracy.
+
+\subsection{Comparison of time-dependent trajectories}\label{sec:4.5}
+
+Figure~\ref{fig:3} compares the three models at $s=0.8$, 1.05, 1.2, and 1.5. The initial field is the same in all cases: $\psi(0)=0.01 \mu\mathrm m^{-1}$, or $n_{C}(0)=10^{-4} \mu\mathrm m^{-2}$.
+
+In the full model, the initial reservoir is chosen on the adiabatic relation: $n_{R}(0)=P/[\gamma_{R}+R n_{C}(0)]$. This removes an initial reservoir mismatch but does not force the reservoir to remain on Eq.~\eqref{eq:16}. Once $n_{C}$ changes, the finite response time can again become important.
+
+All three homogeneous models are integrated using the adaptive eighth-order Runge--Kutta method DOP853 (\texttt{scipy.integrate.solve\_ivp}), with relative and absolute tolerances $2\times10^{-11}$ and $2\times10^{-13}$, respectively. In the reduced models, the reservoir is not integrated separately; its curves are reconstructed from the current field density using the corresponding algebraic relations. The first-order reservoir reconstruction for the cubic model is not shown below the threshold.
+
+The curves illustrate the following regimes:
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item At $s=0.8$, gain is insufficient and the condensate decays.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item At $s=1.05$, the pump is only slightly above the threshold, so initial growth is slow.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item At $s=1.2$ and 1.5, the cubic model visibly underestimates the final density, as predicted by Eq.~\eqref{eq:22}.\end{itemize}
+
+\begin{itemize}\setlength{\itemsep}{3pt}\item At $s=1.5$, the full system shows a transient density overshoot that is suppressed when the reservoir is eliminated instantaneously.\end{itemize}
+
+The overshoot is associated with the delayed reservoir response: the gain does not adjust immediately to the changing condensate density. Agreement of the final levels therefore does not ensure agreement of the transient evolution.
+
+\reportfigure{03_matched_initial_dynamics.png}{Homogeneous condensate--reservoir dynamics with matched initial conditions. Condensate densities (a--d) and reservoir densities (e--h) are shown for $s=0.8$, 1.05, 1.2, and 1.5. The full model is compared with the unexpanded adiabatic reduction and the cubic Stuart--Landau expansion. Reservoir curves in the reduced models are reconstructed algebraically; the cubic approximation is not shown below the threshold. The time ranges differ between panels.}{fig:3}
+
+\subsection{Steady-state and dynamical errors}\label{sec:4.6}
+
+Figure~\ref{fig:4}(a) shows the steady-state error in Eq.~\eqref{eq:22}, which compares the final equilibrium densities. It is an analytical discrepancy between stationary solutions, not an error measured at the last numerical time point. To compare the entire time-dependent trajectory, we use
+
+\begin{equation}\label{eq:23}
+\varepsilon_{\rm dyn}=\frac{1}{n_C^*}\sqrt{\frac1T\int_0^T[n_C^{(\rm approx)}(t)-n_C^{(\rm full)}(t)]^2\,\mathrm dt}.\end{equation}
+
+Here $n_{C}^{\mathrm{approx}}$ is the density from a reduced model, $n_{C}^{\mathrm{full}}$ is that from the full model, $T=1600 \mathrm{ps}$ is the common comparison interval, and $n_{C}^{*}$ is the full model's stationary density.
+
+In Fig.~\ref{fig:4}(b), the error is evaluated at twelve values of $s$ between 1.05 and 1.5. It includes both transient and late-time evolution and thus depends on $T$. A long interval of agreement at the final level can reduce the average error without improving the early dynamics. As $T$ tends to infinity, the adiabatic model's error tends to zero and the cubic model's error tends to 1-1/$s$. Equation~\eqref{eq:23} is used only above the threshold, where $n_{C}^{*}>0$.
+
+\reportfigure{04_reduced_model_accuracy.png}{Accuracy of reduced homogeneous condensate models. (a) Analytical relative errors of the stationary density: zero for the unexpanded adiabatic approximation and 1-1/$s$ for the specified cubic expansion. (b) The root-mean-square density difference from the full model over $T=1600 \mathrm{ps}$, normalized by the full stationary density and evaluated at twelve pump strengths with matched initial conditions.}{fig:4}
+
+\clearpage
+
+\section{Spatial model and numerical method}\label{sec:5}
+
+\subsection{Pump geometry}\label{sec:5.1}
+
+The two-dimensional calculations solve the full Eqs.~\eqref{eq:1}--\eqref{eq:2}, retaining the reservoir as an independent dynamical variable. We consider a central Gaussian spot and a ring-shaped pump:
+
+\begin{equation}\label{eq:24}
+\begin{aligned}
+P_{\rm spot}(r)&=P_0P_{\rm th}\exp(-r^2/d^2),\\
+P_{\rm ring}(r)&=P_0P_{\rm th}\exp[-(r-r_0)^2/d^2],\\
+r&=\sqrt{x^2+y^2},\qquad d=2.5\;\mu\mathrm m,\qquad r_0=10\;\mu\mathrm m.
+\end{aligned}\end{equation}
+
+Here $P_{0}$ is the peak pump strength in units of the homogeneous threshold, d is the 1/e half-width of the profile, and $r_{0}$ is the ring radius. The full width at half maximum is 2d $\sqrt{\ln 2}=4.16 \mu\mathrm m$; for the ring, this is its radial thickness. $P_{0}$ measures the peak rather than the integrated pump: at the same peak strength, the ring pumps a larger area.
+
+For Figs.~\ref{fig:5}--\ref{fig:7}, we choose $P_{0}=13.2$ for the spot and $P_{0}=3.16875$ for the ring. These are 1.2 times the upper bounds of the respective spatial threshold intervals obtained in Section~\ref{sec:8}. The 20\% excess is a chosen comparison regime, not an additional threshold condition. Both pump profiles are radially symmetric, but the random initial field can break this symmetry.
+
+\subsection{Computation and initial conditions}\label{sec:5.2}
+
+\begin{center}\small\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.43\textwidth}}\toprule
+\textbf{Parameter} & \textbf{Gaussian spot} & \textbf{Ring}\\\midrule
+Domain & $256\times 256 \mu\mathrm m^{2}$ & $256\times 256 \mu\mathrm m^{2}$\\
+Grid & $512\times 512$ & $512\times 512$\\
+Spatial step & $0.5 \mu\mathrm m$ & $0.5 \mu\mathrm m$\\
+Time step & $0.025 \mathrm{ps}$ & $0.05 \mathrm{ps}$\\
+Final time & $500 \mathrm{ps}$ & $2000 \mathrm{ps}$\\
+\bottomrule\end{tabular}\end{center}
+
+We use Strang splitting: kinetic evolution is computed in Fourier space, and the local field and reservoir equations are integrated jointly using the fourth-order Runge--Kutta method. The kinetic half-step factor is
+
+\begin{equation}\label{eq:25}
+\exp\left[-i\frac{\hbar^2}{2m}(k_x^2+k_y^2)\frac{\Delta t}{2\hbar}\right].\end{equation}
+
+The complete symmetric scheme is second order in time. Periodic boundary conditions are used without an absorbing layer, and boundary effects are checked separately. Implementation details are collected in Appendix~\ref{sec:A}.
+
+The reservoir is initially empty, and the field is initialized with a small random seed localized within the pump region. A seed is required because a strictly zero field does not grow spontaneously in the deterministic equation. No random source is added after initialization. Grid comparisons use the same continuous seed function.
+
+\subsection{Checks of stationarity and numerical accuracy}\label{sec:5.3}
+
+The integrated populations are defined over the entire computational domain:
+
+\begin{equation}\label{eq:26}
+N_C(t)=\int n_C(\mathbf r,t)\,\mathrm d^2r,\qquad N_R(t)=\int n_R(\mathbf r,t)\,\mathrm d^2r.\end{equation}
+
+With periodic boundaries, Eqs.~\eqref{eq:2}--\eqref{eq:3} give the total particle balance
+
+\begin{equation}\label{eq:27}
+\frac{\mathrm d(N_C+N_R)}{\mathrm dt}=\int P(\mathbf r)\,\mathrm d^2r-\gamma_CN_C-\gamma_RN_R.\end{equation}
+
+Stimulated scattering transfers particles between the components and cancels in their sum. We therefore check Eq.~\eqref{eq:27}, rather than conservation of $N_{C}+N_{R}$ in this open system.
+
+The approach to a steady regime is assessed over $100\,\mathrm{ps}$ windows using both populations and spatial structure. The main tolerances are 0.5\% for population changes and 1\% for fields and densities. This distinguishes a stationary distribution from a moving structure with a constant particle number. The precise criteria are given in Appendix~\ref{sec:A}.
+
+Sensitivity to discretization is checked separately by comparing independent runs. For the spot, second-order temporal convergence is confirmed, and the main population discrepancies are within 0.5\%. The smaller-domain check produces a boundary-effect warning, so the results should not be generalized to arbitrary domain sizes.
+
+For the final ring state at $2000 \mathrm{ps}$, two additional runs start independently from $t=0$ with the same seed: one uses a $256^2$ grid instead of $512^2$, and the other uses a time step of $0.025 \mathrm{ps}$ instead of $0.05 \mathrm{ps}$. Population and density-profile discrepancies do not exceed 0.006\%. Both runs reproduce the stationary regime, total topological charge $q=-3$, and angular momentum close to -3 $\hbar$ per particle. These quantities are defined in Section~\ref{sec:6}; numerical details are given in Appendix~\ref{sec:A}. Agreement between two spatial grids supports consistency but does not determine the spatial order of convergence.
+
+\clearpage
+
+\section{Spatial condensate structure and particle currents}\label{sec:6}
+
+\subsection{Density and energy profile}\label{sec:6.1}
+
+The reservoir provides gain and a repulsive energy shift. Including the condensate interaction contribution, the local mean-field energy shift is
+
+\begin{equation}\label{eq:28}
+V_{\rm int}(\mathbf r,t)=g_Cn_C(\mathbf r,t)+g_R[n_R(\mathbf r,t)+\eta P(\mathbf r)].\end{equation}
+
+This is the real local part of the operator in Eq.~\eqref{eq:1}. The first two density contributions depend on the solution, while the background $g_{R} \eta P$ is prescribed by the pump. Since $g_{R}>0$, a higher reservoir density raises the local polariton energy. A spatially varying reservoir therefore acts as a repulsive potential barrier, with an effective force contribution directed along $-\nabla[g_{R}(n_{R}+\eta P)]$. The pump also supplies gain, so the density distribution is determined jointly by the energy profile, gain, and kinetic transport.
+
+Figure~\ref{fig:5} compares the pump, reservoir, condensate, and $V_{\mathrm{int}}$. Under Gaussian pumping, the condensate extends beyond the narrow reservoir region: particles leave the gain region and continue to experience losses. Under ring-shaped pumping, the reservoir potential and condensate density have ring-like profiles with a low central density. Whether this structure also carries circulation must be determined from the phase and current.
+
+\reportfigure{05_spatial_profiles.png}{Pump injection rate $P$, reservoir density $n_{R}$, condensate density $n_{C}$, and mean-field energy shift $V_{\mathrm{int}}=g_{C} n_{C}+g_{R}(n_{R}+\eta P)$. Top row: Gaussian spot, $P_{0}=13.2$, $t=500 \mathrm{ps}$. Bottom row: ring, $P_{0}=3.16875$, $t=2000 \mathrm{ps}$. Both pumps are approximately 20\% above their respective spatial thresholds; $d=2.5\,\mu\mathrm m$ and $r_{0}=10 \mu\mathrm m$. Each column uses a common absolute color scale for the two geometries.}{fig:5}
+
+\subsection{Phase, current, and circulation}\label{sec:6.2}
+
+Substituting $\psi=\sqrt{n_{C}}\exp(i \varphi)$ into Eq.~\eqref{eq:4} gives
+
+\begin{equation}\label{eq:29}
+\mathbf j=\frac{\hbar}{m}n_C\nabla\varphi.\end{equation}
+
+The phase gradient determines the velocity $\mathbf v=\mathbf j/n_C=(\hbar/m)\nabla\varphi$, while the density sets the local current magnitude. At field zeros, the phase is undefined, so the original expression (4) is used.
+
+A stationary density can carry a nonzero current: Eq.~\eqref{eq:3} gives $\nabla\!\cdot(j)=(R n_{R}-\gamma_{C})n_{C}$. Transport can balance local gain and losses. In Fig.~\ref{fig:6}, the spot current is predominantly outward, and the phase fronts are approximately concentric. For the ring, the phase winds around the central region.
+
+For a nonzero field on a closed contour, single-valuedness of $\psi$ requires an integer number of phase turns. The topological charge is
+
+\begin{equation}\label{eq:30}
+q=\frac{1}{2\pi}\oint\nabla\varphi\cdot\mathrm d\mathbf l,\end{equation}
+
+With a positive counterclockwise contour orientation, $q=-3$ means a phase change of -6 $\pi$. The charge is computed from accumulated phase increments, not from the number of colored bands in the phase map. The contour must avoid field zeros and regions where the density is too small for reliable phase evaluation.
+
+For the final field at $2000 \mathrm{ps}$, several contours give $q=-3$. This is the total charge enclosed by them: it does not distinguish a single charge -3 core from several nearby phase singularities with the same total charge.
+
+\subsection{Angular momentum}\label{sec:6.3}
+
+An additional measure of circulation is the orbital angular momentum of the entire field:
+
+\begin{equation}\label{eq:31}
+L_z=\int\psi^*[-i\hbar(x\partial_y-y\partial_x)]\psi\,\mathrm d^2r.\end{equation}
+
+Since $x \partial_{y}-y \partial_{x}=\partial_{\theta}$, a pure angular mode $\psi=F(r)\exp(i q \theta)$ gives $L_{z}=q \hbar N_{C}$. For a general field, $L_{z}/(\hbar N_{C})$ need not be an integer or equal the charge measured on a contour.
+
+For the ring state found here, this normalized moment is close to -3. Together with phase winding, it confirms a pronounced circulating current despite the nearly circular density distribution.
+
+\reportfigure{06_particle_flow_and_phase.png}{Condensate particle current and phase. Density maps with current arrows (a,c) and phase maps (b,d) correspond to Gaussian and ring-shaped pumping at 500 and $2000 \mathrm{ps}$, respectively. Dashed circles mark contours used for charge evaluation. The final ring state has total charge $q=-3$ and mean orbital angular momentum close to -3 $\hbar$ per particle. The phase is masked in low-density regions.}{fig:6}
+
+Multiply charged vortex states are discussed by Alperin and Berloff (2021) \cite{ref4}. Our result applies to the chosen seed; charge-selection statistics and stability against arbitrary perturbations were not investigated. Section~\ref{sec:9} examines the decay of the preceding angular density modulation.
+
+\clearpage
+
+\section{Momentum-space distributions}\label{sec:7}
+
+\subsection{Definition of the spectrum}\label{sec:7.1}
+
+The density and current maps show where particles are located and how they flow. The momentum-space distribution provides a complementary view: it describes which plane-wave components make up the complex field. A single plane wave $\psi=A \exp(i k_{0} \cdot r)$ contributes a peak at $k_{0}$; a general field contains a range of wave vectors.
+
+We Fourier-transform the field, including its phase, and then take the squared modulus:
+
+\begin{equation}\label{eq:32}
+\widetilde\psi(k_x,k_y,t)=\int\psi(x,y,t)\exp[-i(k_xx+k_yy)]\,\mathrm dx\,\mathrm dy.\end{equation}
+
+\begin{equation}\label{eq:33}
+I_k(k_x,k_y,t)=|\widetilde\psi(k_x,k_y,t)|^2.\end{equation}
+
+Transforming the density itself would instead give the spectrum of its spatial variations, not the momentum composition of the field. The reservoir does not enter Eq.~\eqref{eq:32}.
+
+Figure~\ref{fig:7} shows $\log_{10}[I_{k}/(1 \mu\mathrm m^{2})]$ on a common absolute scale; individual panels are not normalized to their own maxima. The axes show wave-vector components in $\mu\mathrm m^{-1}$, related to momentum by $p=\hbar k$. The discrete normalization is given in Appendix~\ref{sec:A}.
+
+\subsection{Interpretation of the distributions}\label{sec:7.2}
+
+For the Gaussian spot, the spectrum forms a ring at nonzero $|k|$. A radial outward flow includes many propagation directions. When their characteristic wave-vector magnitudes are similar, these components form a ring in momentum space. This is consistent with the outward current in Fig.~\ref{fig:6}; it does not by itself indicate a vortex. The ring is in momentum space, while the pump in real space is a central spot.
+
+Panels 7(a,b) use domains of side length $L=256$ and $192 \mu\mathrm m$, with the same spatial and temporal steps. Similar main features indicate that these features are reproduced under this domain-size change. Detailed boundary checks are discussed in Appendix~\ref{sec:A}.
+
+The kinetic energy scale follows from
+
+\begin{equation}\label{eq:34}
+E_{\rm kin}(k)=\frac{\hbar^2k^2}{2m}=Kk^2,\qquad K=0.677\;\mathrm{meV}\,\mu\mathrm m^2.\end{equation}
+
+At $k\simeq1 \mu\mathrm m^{-1}$, the energy is about $0.677 \mathrm{meV}$, comparable in scale to the energy shift in Fig.~\ref{fig:5}. This is an order-of-magnitude comparison, not a local equality $E_{\mathrm{kin}}=V_{\mathrm{int}}$.
+
+The ring-pumped state's spectrum is more structured and approximately concentric. It depends on both the radial field profile and the angular phase. However, $I_{k}$ does not determine the sign of circulation. Fields $F(r)\exp(\pm{}i q \theta)$ with the same radial profile have identical momentum-space intensities. The conclusion $q=-3$ therefore comes from the phase contours; the spectrum complements the real-space picture.
+
+\reportfigure{07_momentum_distributions.png}{Momentum-space intensity of the coherent condensate, $\log_{10}[I_{k}/(1 \mu\mathrm m^{2})]$. (a,b) Gaussian spot at $t=500 \mathrm{ps}$ for $L=256$ and $192 \mu\mathrm m$, respectively, with identical spatial and temporal steps. (c) Ring at $t=2000 \mathrm{ps}$ and $L=256 \mu\mathrm m$. All panels use a common absolute logarithmic scale. The two Gaussian spectra compare domain sizes; they are not an independent grid-refinement check.}{fig:7}
+
+\clearpage
+
+\section{Linear instability thresholds under localized pumping}\label{sec:8}
+
+\subsection{Linear spatial problem}\label{sec:8.1}
+
+In a homogeneous system, gain--loss balance $R n_{R}=\gamma_{C}$ is sufficient. Under localized pumping, part of the mode extends beyond the gain region and experiences losses. Positive local growth near the pump maximum therefore does not guarantee growth of the entire mode: its spatial profile must be taken into account.
+
+On the condensate-free branch, the reservoir has the stationary profile
+
+\begin{equation}\label{eq:35}
+\psi_0(\mathbf r)=0,\qquad n_{R,0}(\mathbf r)=\frac{P(\mathbf r)}{\gamma_R}.\end{equation}
+
+Set $\psi=\delta \psi$ and $n_{R}=n_{R,0}+\delta n_{R}$. To first order, kinetic evolution and the stationary reservoir contribution remain. The term $g_{C}|\delta \psi|^2 \delta \psi$ is cubic, $\delta n_{R} \delta \psi$ is second order, and particle transfer from the reservoir begins at order $|\delta \psi|^2$. These terms do not enter the linear field equation. Dividing Eq.~\eqref{eq:1} by i $\hbar$ gives
+
+\begin{equation}\label{eq:36}
+\begin{aligned}
+\partial_t\delta\psi
+&=\frac{iK}{\hbar}\nabla_\perp^2\delta\psi
++\left[\frac12\left(\frac{RP(\mathbf r)}{\gamma_R}-\gamma_C\right)\right.\\
+&\qquad\left.-\frac{ig_R}{\hbar}\left(\frac{P(\mathbf r)}{\gamma_R}+\eta P(\mathbf r)\right)\right]\delta\psi.
+\end{aligned}\end{equation}
+
+The reservoir perturbation decays independently at rate $\gamma_{R}$. The energy profile remains in Eq.~\eqref{eq:36} even with zero condensate density: it affects the mode shape and its overlap with gain. The threshold therefore cannot be determined from the maximum local growth rate alone.
+
+\subsection{Growth rate and threshold search}\label{sec:8.2}
+
+Denote the operator in Eq.~\eqref{eq:36} by A and substitute $\delta \psi=u(r)\exp(\lambda t)$. This gives Au=$\lambda u$, where $\sigma=\operatorname{Re} \lambda$ is the amplitude growth rate. This is the spatial counterpart of the Jacobian analysis: a field profile replaces the two-component vector.
+
+If the initial field overlaps the leading mode, the largest $\operatorname{Re} \lambda$ eventually dominates. Since $N_{\mathrm{lin}}=\int|\delta \psi|^2d^{2}r$ varies as $\exp(2 \sigma t)$,
+
+\begin{equation}\label{eq:37}
+\sigma=\frac12\frac{\mathrm d\ln N_{\rm lin}(t)}{\mathrm dt}.\end{equation}
+
+The factor 1/2 converts population growth into amplitude growth. For $\sigma<0$, a weak field decays; for $\sigma>0$, it grows. The zero crossing defines the linear instability threshold, without excluding possible separate finite-density solutions below it.
+
+For each $P_{0}$, Eq.~\eqref{eq:36} is integrated with the fixed reservoir (35), and $\sigma$ is estimated after the leading mode emerges. Numerically, we compute $N_{\mathrm{lin}}$ from the evolving field and take half the fitted late-time slope of $\ln N_{\mathrm{lin}}$. Pump values with opposite signs of $\sigma$ bracket the threshold. These are numerical bounds, not a statistical confidence interval. Leading-mode checks and technical details are given in Appendix~\ref{sec:A}.
+
+\reportfigure{08_localized_condensation_thresholds.png}{Linear instability thresholds of the condensate-free state under localized pumping. The field-amplitude growth rate $\sigma$ is computed with $n_{R,0}=P/\gamma_{R}$. (a,b) Pump scans for the spot and ring; (c,d) enlarged threshold regions. Circles indicate $\sigma<0$ (linear stability of the zero-field state), and triangles indicate $\sigma>0$ (instability). Gray bands bracket $P_{0,c}$ within [10.9375,11.0000] for the spot and [2.6250,2.640625] for the ring. Dashed lines mark the homogeneous reference $P_{0}=1$. The bands are numerical intervals, not confidence intervals.}{fig:8}
+
+\subsection{Results}\label{sec:8.3}
+
+The spot threshold lies in $P_{0,c}\in[10.9375,11.0000]$, and the ring threshold lies in [2.6250,2.640625]. Both exceed the homogeneous reference $P_{0}=1$: gain must compensate losses over the entire spatial mode.
+
+The ring has a lower threshold peak pump strength but a larger pumped area. These values therefore do not establish a lower total threshold pump power; that comparison requires $\displaystyle\int P(\mathbf r)\,d^2r$. The results apply to the geometry in Eq.~\eqref{eq:24} and the chosen parameters.
+
+The linear analysis establishes the onset of weak-field growth. The final saturated state and its circulation are determined by the subsequent nonlinear dynamics.
+
+\clearpage
+
+\section{Transient evolution of the ring-pumped condensate}\label{sec:9}
+
+\subsection{From six maxima to a nearly circular density}\label{sec:9.1}
+
+At $1000 \mathrm{ps}$, six maxima moving around the ring are still visible. To determine whether this structure persists, the same trajectory is continued to $2000 \mathrm{ps}$. In Fig.~\ref{fig:9}, the populations approach $N_{C}\simeq306$ and $N_{R}\simeq6533$, while density snapshots show a gradual loss of contrast of the moving maxima.
+
+To quantify the angular density modulation, we introduce
+
+\begin{equation}\label{eq:38}
+A_m(t)=\frac{2\left|\int_{\rm core} n_C(r,\theta,t)\exp(im\theta)\,\mathrm d^2r\right|}{\int_{\rm core} n_C(r,\theta,t)\,\mathrm d^2r}.\end{equation}
+
+Here $\theta$ is the polar angle and core is the central $80\times 80 \mu\mathrm m^{2}$ square. This is a diagnostic used in our calculation: a normalized angular Fourier component of the density. The denominator separates relative modulation from changes in particle number. With integration over the full angular range and a density $n_{C}=n_{0}(r)[1+a \cos(m \theta+\alpha)]$, the factor 2 gives $A_{m}=|a|$. The finite square region used here is discussed in Appendix~\ref{sec:A}.
+
+We use $m=6$ to measure the sixfold pattern. $A_{6}$ decreases from 29.1\% at $1000 \mathrm{ps}$ to 0.567\% at $1500 \mathrm{ps}$ and 0.0107\% at $2000 \mathrm{ps}$. The six-lobed structure is therefore a decaying transient. Its maxima may move while their contrast decreases; observing their rotation alone does not demonstrate a persistent rotating density pattern.
+
+The first window satisfying the stationarity criteria is 1500--$1600 \mathrm{ps}$. Over the late window $1900\text{--}2000\,\mathrm{ps}$, the normalized density shape changes by only 0.0234\%. This measures temporal settling of one solution; sensitivity to the grid and time step is checked separately in Section~\ref{sec:5}.
+
+\reportfigure{09_ring_transient_evolution.png}{Transient evolution under ring-shaped pumping. (a,b) Integrated populations $N_{C}(t)$ and $N_{R}(t)$ from 0 to $2000 \mathrm{ps}$. (c--f) Condensate density at 1000, 1200, 1500, and $2000 \mathrm{ps}$ on a common absolute color scale. The sixfold angular density modulation decays, leaving a nearly axisymmetric stationary density distribution. The final state has total charge $q=-3$ within the contours considered in Fig.~\ref{fig:6}.}{fig:9}
+
+\subsection{Why the disappearance of the lobes does not remove circulation}\label{sec:9.2}
+
+Angular density modulation concerns $|\psi|^2$, whereas circulation depends on the phase. For example, $\psi=F(r)\exp(i q \theta)\exp(-i \Omega t)$ has an axisymmetric density but, by Eq.~\eqref{eq:29}, carries an azimuthal current $j_{\theta}=(\hbar q/(m r))|F(r)|^2$. The disappearance of density lobes is therefore compatible with a nonzero circulating flow.
+
+In the calculation, the final nearly circular field has total charge $q=-3$ and angular momentum close to -3 $\hbar$ per particle. The index $m=6$ characterizes density modulation and does not by itself determine $q$. The complete time history of the charge was not tracked, so we establish the final charge rather than its conservation throughout the trajectory.
+
+The modulation decays through the coupled field--reservoir dynamics, including gain, particle transfer, losses, and transport. $A_{6}$ quantifies its disappearance, but no separate modal decomposition was performed. The six lobes therefore cannot be assigned to a particular pair of interfering modes from these data alone.
+
+\clearpage
+
+\section{Conclusions}\label{sec:10}
+
+In the homogeneous model, the threshold $P_{\mathrm{th}}=\gamma_{C} \gamma_{R}/R$ follows from gain--loss balance. Above it, the reservoir is clamped at $n_{R}^{*}=\gamma_{C}/R$ and the condensate density is $(P-P_{\mathrm{th}})/\gamma_{C}$. The nonzero branch is stable against small homogeneous density perturbations; for the chosen parameters, oscillatory relaxation occurs over $1.0801<s<13.4799$.
+
+Adiabatic elimination preserves the stationary densities but can miss the delayed reservoir response. A further small-density expansion gives a cubic Stuart--Landau model with a steady-state error 1-1/$s$ for the derived coefficients. A fast reservoir response and a small density are distinct validity conditions.
+
+Under localized pumping, the linear instability threshold of the condensate-free state depends on the spatial mode profile. The spot and ring thresholds both exceed the homogeneous reference. The density, current, and momentum-space distributions are consistent with the combined effects of gain, the repulsive reservoir potential, and field propagation.
+
+Under ring-shaped pumping, the six-lobed modulation decays, leaving a nearly axisymmetric density with total charge $q=-3$ and angular momentum close to -3 $\hbar$ per particle. The final state is reproduced under the tested discretization changes with the same seed. This is a specific solution of the model: charge-selection statistics, the internal core structure, and stability against arbitrary perturbations have not been investigated.
+
+\clearpage
+\begin{thebibliography}{9}
+\bibitem{ref1}
+M.~Wouters and I.~Carusotto.
+Excitations in a nonequilibrium Bose--Einstein condensate of exciton polaritons.
+\textit{Physical Review Letters} \textbf{99}, 140402 (2007).
+\url{https://doi.org/10.1103/PhysRevLett.99.140402}
+\bibitem{ref2}
+N.~Bobrovska and M.~Matuszewski.
+Adiabatic approximation and fluctuations in exciton-polariton condensates.
+\textit{Physical Review B} \textbf{92}, 035311 (2015).
+\url{https://doi.org/10.1103/PhysRevB.92.035311}
+\bibitem{ref3}
+S.~Alyatkin et al.
+Antiferromagnetic Ising model in a triangular vortex lattice of quantum fluids of light.
+\textit{Science Advances} \textbf{10}, eadj1589 (2024).
+\url{https://doi.org/10.1126/sciadv.adj1589}
+\bibitem{ref4}
+S.~N.~Alperin and N.~G.~Berloff.
+Multiply charged vortex states of polariton condensates.
+\textit{Optica} \textbf{8}, 301--307 (2021).
+\url{https://doi.org/10.1364/OPTICA.418377}
+\end{thebibliography}
+
+\clearpage
+\appendix
+\section{Numerical implementation and validation}\label{sec:A}
+
+\subsection{Initial field}\label{sec:A.1}
+
+With $n_{R}(r,0)=0$, the initial field is one realization of a plane-wave sum:
+
+\[
+\begin{aligned}\psi(\mathbf r,0)&=\frac{\sqrt{n_{\rm seed}f(r)}}{\sqrt M}\sum_{j=1}^{M}\exp[i(k_{x,j}x+k_{y,j}y+\varphi_j)],\\f(r)&=\frac{P(r)}{P_0P_{\rm th}},\qquad n_{\rm seed}=10^{-6}\;\mu\mathrm m^{-2},\qquad M=24.\end{aligned}
+\]
+
+The phases $\varphi_{j}$ are independent and uniformly distributed on [0,2 $\pi$). The components $k_{x,j}$ and $k_{y,j}$ are normally distributed with zero mean and standard deviation $1 \mu\mathrm m^{-1}$. The random-number seed is 20261008. Division by $\sqrt{M}$ preserves the ensemble-averaged density scale when the number of waves changes; in an individual realization, interference modulates the density.
+
+When the grid changes, the wave vectors and phases are retained and the same continuous expression is evaluated at the new nodes. Randomness enters only through the initial condition. This seed initiates deterministic dynamics but is not a microscopic model of fluctuations; its parameters are not determined by the reservoir equations. The sensitivity of the final charge to the seed realization was not tested.
+
+\subsection{Integration scheme and spectrum}\label{sec:A.2}
+
+A Strang step consists of a kinetic half-step, a full local step, and a second kinetic half-step. The kinetic evolution is computed through FFT with the factor in Eq.~\eqref{eq:25}; the local equations for $\psi$ and $n_{R}$ are integrated using fourth-order Runge--Kutta. Noncommutativity of the two parts limits the full scheme to second order.
+
+The numerical constants are
+\[
+\begin{aligned}
+\hbar&=0.6582119569\;\mathrm{meV}\,\mathrm{ps},\\
+K=\hbar^2/(2m)&=0.676728618\;\mathrm{meV}\,\mu\mathrm m^2.
+\end{aligned}
+\]
+Rounded values in the main text are used for presentation.
+
+With the convention in Eq.~\eqref{eq:32}, the discrete transform is $\widetilde\psi\simeq\Delta x\,\Delta y\,\operatorname{FFT2}(\psi)$. The cell-area factor converts the sum into an integral approximation and preserves the physical scale under grid changes. The units of $\widetilde\psi$ and $I_{k}$ are $\mu\mathrm m$ and $\mu\mathrm m^{2}$, respectively. The intensity in the logarithm in Fig.~\ref{fig:7} is divided by $1 \mu\mathrm m^{2}$.
+
+\subsection{Stationarity criteria}\label{sec:A.3}
+
+Complete $100\,\mathrm{ps}$ windows are analyzed. Populations are recorded every $1 \mathrm{ps}$ and spatial fields every $5 \mathrm{ps}$. Fields are compared at delays of 20 and $35 \mathrm{ps}$; changes relative to the start of the window are also accumulated at $1\,\mathrm{ps}$ intervals.
+
+\begin{center}\small\begin{tabular}{>{\raggedright\arraybackslash}p{0.64\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}\toprule
+\textbf{Quantity} & \textbf{Tolerance}\\\midrule
+Relative range of each population & 0.5\%\\
+Changes in condensate and reservoir densities & 1\%\\
+Field change after global-phase alignment & 1\%\\
+Current change, where the criterion is applicable & 2\%\\
+\bottomrule\end{tabular}\end{center}
+
+Global-phase alignment removes differences caused only by a factor $\exp(-i \Omega t)$. For the ring, the density shape is also checked within core: $|x|$,$|y|\le40 \mu\mathrm m$. We define
+
+\[
+\begin{aligned}u(\mathbf r,t)&=\frac{n_C(\mathbf r,t)}{\displaystyle\int_{\rm core}n_C(\mathbf r,t)\,\mathrm d^2r},\\D_u(t)&=\frac{\|u(t)-u(t_0)\|_2}{\|u(t_0)\|_2},\\\|v\|_2^2&=\int_{\rm core}|v|^2\,\mathrm d^2r.\end{aligned}
+\]
+
+The maximum $D_{u}$ over the window is reported. This normalization separates shape changes from changes in particle number within core. For $1900\text{--}2000\,\mathrm{ps}$, $\max D_u=0.0234\%$ and $(\max N_C-\min N_C)/\operatorname{mean}N_C=1.65\times10^{-6}\%$. Late-time oscillation checks did not identify a significant sustained oscillation. These quantities measure variation of one solution over time, not its error relative to an independent run.
+
+\subsection{Discretization, boundaries, and particle balance}\label{sec:A.4}
+
+For the Gaussian spot, grids of $256^2$, $512^2$, and $1024^2$, time steps of 0.05, 0.025, and $0.0125 \mathrm{ps}$, and two domain sizes are tested. The observed temporal order is 1.998. The main population discrepancies are within 0.5\%. One boundary check for the smaller domain gives a warning; similarity of the spectral maps does not remove this warning.
+
+For the ring, the reference uses $512^2$, $\Delta t=0.05 \mathrm{ps}$, $L=256 \mu\mathrm m$, and $t_{\mathrm{final}}=2000 \mathrm{ps}$. Additional runs start independently from $t=0$ with the same initial field. All discrepancies below are percentages relative to the reference.
+
+\begin{center}\small\begin{tabular}{>{\raggedright\arraybackslash}p{0.35\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}}\toprule
+\textbf{Check} & \textbf{$N_{C}$} & \textbf{$N_{R}$} & \textbf{Density $n_{C}$, relative $L^{2}$ norm}\\\midrule
+Grid $256^2$, $\Delta t=0.05 \mathrm{ps}$ & At most 0.000031\% & At most 0.000031\% & At most 0.000031\%\\
+Grid $512^2$, $\Delta t=0.025 \mathrm{ps}$ & 0.00594\% & 0.000950\% & 0.00559\%\\
+\bottomrule\end{tabular}\end{center}
+
+The spatial-check row gives a common upper bound for the three discrepancies, not three identical measured values. Densities are compared over the entire domain; this differs from the normalized shape $u$ in A.3. The $256^2$ grid is coarser than the reference, so the comparison supports consistency of two resolutions but does not establish the spatial order of convergence.
+
+Both runs reach a steady regime and reproduce $q=-3$ on five common admissible contours, together with $L_{z}/(\hbar N_{C})\simeq-3$. The final ring state passes checks of the particle balance in Eq.~\eqref{eq:27}, edge density, and high-frequency spectral components. The last check monitors components near the spatial-resolution limit.
+
+\subsection{Circulation and angular modulation diagnostics}\label{sec:A.5}
+
+For the final ring field, contours with radii 4, 6, 7.5, 9, and $12 \mu\mathrm m$ are used. Each is traversed counterclockwise and gives $q=-3$. The phase is masked in low-density regions in the figure.
+
+In Eq.~\eqref{eq:38}, the factor 2 is chosen so that $n_{C}=n_{0}(r)[1+a \cos(m \theta+\alpha)]$ gives $A_{m}=|a|$ when integrated over the full angular range. In the calculation, the integral is restricted to the square core, so $A_{m}$ is interpreted as a normalized angular Fourier component of the density. The values 29.1\%, 0.567\%, and 0.0107\% correspond to $m=6$ at 1000, 1500, and $2000 \mathrm{ps}$.
+
+\subsection{Leading-mode extraction in the threshold search}\label{sec:A.6}
+
+The linear equation~\eqref{eq:36} is integrated with fixed $n_{R,0}=P/\gamma_{R}$. The growth rate is estimated by straight-line fits to $\ln N_{\mathrm{lin}}$ in two adjacent late-time windows of $100 \mathrm{ps}$, with checks of fit quality and spatial mode overlap. If the leading mode emerges slowly, the calculation is extended: an early mixture of modes can give a different logarithmic slope.
+
+To prevent overflow or underflow, the field is periodically rescaled and the logarithms of the rescaling factors are accumulated. These factors reconstruct the logarithmic population growth that would occur without rescaling. Since the equation is linear, rescaling does not change the mode shape or its growth rate. Repeated random seeds and changes in grid and domain size are used as checks. These validate the linear threshold, not the statistics of the final nonlinear charge.
+
+When comparing with Section~\ref{sec:3}, Eq.~\eqref{eq:37} describes amplitude growth, whereas the Jacobian eigenvalues describe density perturbations. Moreover, far below the threshold, the maximum in Fig.~\ref{fig:1} can belong to the reservoir mode. The entire curve therefore cannot be identified with $\sigma$ simply by dividing it by two.
+\clearpage
+\input{appendix_B_fourier_split_step.tex}
+\end{document}

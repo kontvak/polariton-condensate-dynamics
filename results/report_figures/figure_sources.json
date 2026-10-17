@@ -1,0 +1,316 @@
+{
+  "gaussian_run": "results/runs/20261008T202037825481Z_gaussian_39638652",
+  "ring_run": "results/runs/20261009T165821396257Z_ring_e2931e52",
+  "gaussian_spectrum_runs": [
+    "results/runs/20261008T210129031254Z_gaussian_18a45a88"
+  ],
+  "ring_spectrum_runs": [],
+  "gaussian_threshold": "results/runs/20261008T133656110451Z_gaussian_a864f36e/summary.json",
+  "ring_threshold": "results/runs/20261008T133656177075Z_ring_29884563/summary.json",
+  "convergence": "results/runs/20261009T125607055578Z_gaussian_da5a5a8a/convergence.json",
+  "data_dir": "results/analysis_data",
+  "png_dpi": 300,
+  "width_mm": 160,
+  "titles": {
+    "01_homogeneous_threshold.png": "Stationary densities and condensate-free state stability",
+    "02_condensed_state_stability.png": "Condensed-state stability and relaxation",
+    "03_matched_initial_dynamics.png": "Homogeneous condensate–reservoir dynamics",
+    "04_reduced_model_accuracy.png": "Accuracy of reduced models",
+    "05_spatial_profiles.png": "Spatial profiles under localized pumping",
+    "06_particle_flow_and_phase.png": "Particle current and condensate phase",
+    "07_momentum_distributions.png": "Momentum distributions and spot domain comparison",
+    "08_localized_condensation_thresholds.png": "Linear instability thresholds of localized pumps",
+    "09_ring_transient_evolution.png": "Transient evolution of the ring condensate"
+  },
+  "font_sizes_pt": {
+    "ticks_and_legends": 8,
+    "labels": 9,
+    "panel_titles": 10,
+    "compact_panel_titles": 9
+  },
+  "figure_sizes_mm": {
+    "01_homogeneous_threshold.png": [
+      159.9,
+      77.5
+    ],
+    "02_condensed_state_stability.png": [
+      159.9,
+      100.3
+    ],
+    "03_matched_initial_dynamics.png": [
+      159.9,
+      119.4
+    ],
+    "04_reduced_model_accuracy.png": [
+      159.9,
+      83.8
+    ],
+    "05_spatial_profiles.png": [
+      159.9,
+      101.6
+    ],
+    "06_particle_flow_and_phase.png": [
+      159.9,
+      177.8
+    ],
+    "07_momentum_distributions.png": [
+      159.9,
+      88.9
+    ],
+    "08_localized_condensation_thresholds.png": [
+      159.9,
+      142.2
+    ],
+    "09_ring_transient_evolution.png": [
+      159.9,
+      118.1
+    ]
+  },
+  "layout_check": "02 equilibrium marker changed to a circle; 05 pump label centred on one line; 06 arrows white with black outlines. Revised figures checked for clipping/overlap and visually reviewed. 03 remains unchanged. 08 updated with long-time growth estimates; zoom panels padded to keep edge markers visible; text clipping and overlap checked. 01–05 wording revised; long panel labels wrapped; 03 reservoir reconstruction note added without changing panel arrangement; all revised PNGs checked for clipping and text overlap.",
+  "ring_dynamics": "results/analysis_data/ring_dynamics.json",
+  "ring_dynamics_run": "results/runs/20261009T165821396257Z_ring_e2931e52",
+  "accuracy_sampling": {
+    "source": "results/analysis_data/stage2_0d_data.npz",
+    "dynamic_pump_points": [
+      1.05,
+      1.075,
+      1.1,
+      1.125,
+      1.15,
+      1.2,
+      1.25,
+      1.3,
+      1.35,
+      1.4,
+      1.45,
+      1.5
+    ],
+    "number_of_points": 12,
+    "time_interval_ps": [
+      0,
+      1600
+    ],
+    "sample_interval_ps": 0.5,
+    "additional_calculation_wall_s": 1.8050912099997731
+  },
+  "spectrum_display_check": {
+    "colour_floor_um2": 0.00016639661795069853,
+    "relative_floor_to_common_peak": 1e-08,
+    "interpretation": "Black outer rims indicate values below the display floor; saved Fourier intensities retain nonzero tails."
+  },
+  "threshold_sampling": {
+    "date": "2026-10-10",
+    "additional_scan": {
+      "spot": {
+        "source": "results/runs/20261008T133656110451Z_gaussian_a864f36e/summary.json",
+        "new_P0": [
+          2.0,
+          4.0,
+          6.0,
+          8.0,
+          11.5
+        ],
+        "unique_P0_count": 12,
+        "total_saved_points": 14,
+        "wall_s": 33.38034405899998
+      },
+      "ring": {
+        "source": "results/runs/20261008T133656177075Z_ring_29884563/summary.json",
+        "new_P0": [
+          0.5,
+          1.0,
+          1.5,
+          2.0,
+          2.875
+        ],
+        "unique_P0_count": 12,
+        "total_saved_points": 14,
+        "wall_s": 23.747574592000092
+      }
+    },
+    "total_additional_wall_s": 57.12791865100007,
+    "grid": [
+      128,
+      128
+    ],
+    "domain_um": [
+      128,
+      128
+    ],
+    "dt_ps": 0.05,
+    "threshold_brackets_changed": false,
+    "tests": {
+      "command": ".venv/bin/python -B -m pytest -q -p no:cacheprovider test_project.py",
+      "result": "38 passed in 2.37s",
+      "returncode": 0
+    },
+    "point_checks": "All 10 new points satisfy both R2>=0.99, adjacent-window sigma agreement, |sigma|>2stderr and expected sign outside the preserved bracket.",
+    "mode_convergence": "6 previously unresolved points pass overlap >=0.95 at lags 20/50/100 ps on two successive check times and long-time sigma agreement. Other 4 new points retain their original convergence checks.",
+    "unchanged_other_figures": true,
+    "mode_validation": {
+      "spot": {
+        "protocol": {
+          "lags_ps": [
+            20,
+            50,
+            100
+          ],
+          "overlap_min": 0.95,
+          "two_successive_check_times": true,
+          "sigma_change_rel_max": 0.01,
+          "sigma_change_abs_per_ps_max": 0.0001,
+          "duration_targets_ps": [
+            1200.0,
+            2400.0,
+            4800.0,
+            9600.0,
+            19200.0,
+            38400.0
+          ],
+          "wall_budget_minutes": 50,
+          "same_grid_and_dt": true
+        },
+        "source_arrays": "results/runs/20261008T133656110451Z_gaussian_a864f36e/threshold_mode_checks.npz",
+        "cases": {
+          "2.0": {
+            "status": "SETTLED",
+            "duration_ps": 38400.0,
+            "sigma_per_ps": -0.0885312463376523,
+            "mode_overlaps": {
+              "20": 0.9999968923983323,
+              "50": 0.9999969099062952,
+              "100": 0.9999985235462625
+            },
+            "sigma_change_from_previous_per_ps": 1.6192839247544666e-05,
+            "eigenstep_residual_per_ps": 0.00022597758402363415,
+            "wall_s": 659.2016699960013
+          },
+          "4.0": {
+            "status": "SETTLED",
+            "duration_ps": 19200.0,
+            "sigma_per_ps": -0.08489056711909582,
+            "mode_overlaps": {
+              "20": 0.9999960679291526,
+              "50": 0.9999999050323225,
+              "100": 0.9999996219713987
+            },
+            "sigma_change_from_previous_per_ps": 9.712162975086813e-06,
+            "eigenstep_residual_per_ps": 0.00017980609214018623,
+            "wall_s": 337.5064742019995
+          },
+          "6.0": {
+            "status": "SETTLED",
+            "duration_ps": 2400.0,
+            "sigma_per_ps": -0.07869692134089705,
+            "mode_overlaps": {
+              "20": 0.9997067772021273,
+              "50": 0.9998828392857062,
+              "100": 0.9996499057384652
+            },
+            "sigma_change_from_previous_per_ps": 8.132246974001944e-05,
+            "eigenstep_residual_per_ps": 0.0018093811326617309,
+            "wall_s": 60.29013561600186
+          }
+        },
+        "status": "SETTLED",
+        "wall_s": 1056.9982798140027,
+        "tests": {
+          "command": ".venv/bin/python -B -m pytest -q -p no:cacheprovider test_project.py",
+          "result": "38 passed in 2.37s",
+          "returncode": 0
+        },
+        "saved_array_checks": {
+          "normalized_fields": true,
+          "config_hashes_match": true,
+          "recomputed_fit_matches_summary": true,
+          "sample_interval_ps": 1.0,
+          "all_six_points_confirmed": true
+        }
+      },
+      "ring": {
+        "protocol": {
+          "lags_ps": [
+            20,
+            50,
+            100
+          ],
+          "overlap_min": 0.95,
+          "two_successive_check_times": true,
+          "sigma_change_rel_max": 0.01,
+          "sigma_change_abs_per_ps_max": 0.0001,
+          "duration_targets_ps": [
+            1200.0,
+            2400.0,
+            4800.0,
+            9600.0,
+            19200.0,
+            38400.0
+          ],
+          "wall_budget_minutes": 50,
+          "same_grid_and_dt": true
+        },
+        "source_arrays": "results/runs/20261008T133656177075Z_ring_29884563/threshold_mode_checks.npz",
+        "cases": {
+          "0.5": {
+            "status": "SETTLED",
+            "duration_ps": 4800.0,
+            "sigma_per_ps": -0.08536010990395891,
+            "mode_overlaps": {
+              "20": 0.999999803609551,
+              "50": 0.9999999211871992,
+              "100": 0.9999997498588772
+            },
+            "sigma_change_from_previous_per_ps": 2.795322511836562e-06,
+            "eigenstep_residual_per_ps": 3.7010015503427894e-05,
+            "wall_s": 96.02827238199734
+          },
+          "1.0": {
+            "status": "SETTLED",
+            "duration_ps": 2400.0,
+            "sigma_per_ps": -0.07209882573984883,
+            "mode_overlaps": {
+              "20": 0.999999989900475,
+              "50": 0.9999999752376567,
+              "100": 0.9999999919475779
+            },
+            "sigma_change_from_previous_per_ps": 1.1917363859637042e-06,
+            "eigenstep_residual_per_ps": 7.452801118101761e-06,
+            "wall_s": 58.17890355700001
+          },
+          "2.0": {
+            "status": "SETTLED",
+            "duration_ps": 2400.0,
+            "sigma_per_ps": -0.031821795887670486,
+            "mode_overlaps": {
+              "20": 0.9999730917550718,
+              "50": 0.9999828827053695,
+              "100": 0.9999527709400093
+            },
+            "sigma_change_from_previous_per_ps": 1.2769321202386885e-05,
+            "eigenstep_residual_per_ps": 0.00042352761073426295,
+            "wall_s": 58.09982439899977
+          }
+        },
+        "status": "SETTLED",
+        "wall_s": 212.30700033799712,
+        "tests": {
+          "command": ".venv/bin/python -B -m pytest -q -p no:cacheprovider test_project.py",
+          "result": "38 passed in 2.37s",
+          "returncode": 0
+        },
+        "saved_array_checks": {
+          "normalized_fields": true,
+          "config_hashes_match": true,
+          "recomputed_fit_matches_summary": true,
+          "sample_interval_ps": 1.0,
+          "all_six_points_confirmed": true
+        }
+      }
+    },
+    "total_mode_check_wall_s": 1269.3052801519998
+  },
+  "caption_notes": {
+    "03_matched_initial_dynamics.png": "The Stuart–Landau reservoir is reconstructed approximately; no separate reservoir evolution equation is integrated."
+  },
+  "ring_final_checks": "results/analysis_data/final_ring_checks.json"
+}

@@ -6,4 +6,26 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
-results/
+
+# Full research runs and temporary plots stay local.
+results/*
+!results/report_figures/
+!results/analysis_data/
+results/report_figures/*
+!results/report_figures/0*.png
+!results/report_figures/05_*_evolution.gif
+!results/report_figures/figure_sources.json
+results/analysis_data/*
+!results/analysis_data/report_data.npz
+!results/analysis_data/report_metadata.json
+
+# LaTeX auxiliary files (sources and PDFs are versioned).
+latex/*.aux
+latex/*.bbl
+latex/*.blg
+latex/*.fdb_latexmk
+latex/*.fls
+latex/*.log
+latex/*.out
+latex/*.synctex.gz
+latex/*.toc

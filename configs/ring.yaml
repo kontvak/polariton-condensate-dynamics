@@ -1,2 +1,0 @@
-extends: base.yaml
-pump: {kind: ring}

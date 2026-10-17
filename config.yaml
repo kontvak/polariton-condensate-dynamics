@@ -1,0 +1,124 @@
+base:
+  run:
+    validation_mode: physical
+  model:
+    source: Alyatkin et al., Science Advances 2024, DOI 10.1126/sciadv.adj1589
+    mass_over_me: 5.63e-05
+    gC_mev_um2: 0.0024
+    gR_mev_um2: 0.0048
+    R_um2_per_ps: 0.021
+    gammaC_per_ps: 0.182
+    gammaR_per_ps: 0.05
+    eta_times_gammaR: 0.49
+    background_blueshift: true
+  pump:
+    kind: gaussian
+    P0: 3.0
+    center_um:
+    - 0.0
+    - 0.0
+    d_um: 2.5
+    r0_um: 10.0
+  initial:
+    mode: physical_startup
+    psi_seed_density_um2_inv: 1.0e-06
+    seed_correlation_um: 1.0
+    random_seed: 20261008
+  space:
+    Lx_um: 128.0
+    Ly_um: 128.0
+    Nx: 512
+    Ny: 512
+    boundary: periodic
+    absorbing_layer: false
+    absorber_width_um: 20.0
+    absorber_gamma_max_per_ps: 0.5
+  time:
+    dt_ps: 0.05
+    t_final_ps: 500.0
+    integrator: split_step_local_rk4
+  save:
+    diagnostic_every_ps: 10.0
+    observable_every_ps: 1.0
+    snapshot_every_ps: 20.0
+    stationarity_probe_every_ps: 5.0
+    stationarity_reference_every_ps: 1.0
+    checkpoint_every_ps: 100.0
+  checks:
+    edge_width_um: 10.0
+    edge_mass_warn: 0.0001
+    edge_peak_warn: 1.0e-05
+    high_k_cutoff_fraction: 0.75
+    high_k_warn: 0.0001
+    signal_min_rel: 1.0e-06
+    growth_signal_min_rel: 1.0e-12
+    stationarity_window_ps: 100.0
+    stationarity_lags_ps:
+    - 20.0
+    - 35.0
+    stationary_count_span_rel: 0.005
+    stationary_density_change_rel: 0.01
+    stationary_reservoir_change_rel: 0.01
+    stationary_field_change_rel: 0.01
+    stationary_current_change_rel: 0.02
+    balance_warn_rel: 1.0e-06
+    # Legacy name: recommendation only; exceeding it does not stop a run.
+    max_walltime_per_run_minutes: 20
+  threshold:
+    initial_P0_scan:
+    - 0.5
+    - 1.0
+    - 1.5
+    - 2.0
+    - 3.0
+    - 4.0
+    - 6.0
+    - 8.0
+    - 12.0
+    linear_fit_window_ps: 100.0
+    linear_fit_R2_min: 0.99
+    sigma_agreement_rel: 0.1
+    sigma_agreement_abs_per_ps: 0.0001
+    target_bracket_rel: 0.01
+profiles:
+  gaussian:
+    pump:
+      kind: gaussian
+  ring:
+    pump:
+      kind: ring
+  validation:
+    initial:
+      mode: deterministic_test
+    space:
+      Lx_um: 32.0
+      Ly_um: 32.0
+      Nx: 64
+      Ny: 64
+    time:
+      t_final_ps: 2.0
+    save:
+      diagnostic_every_ps: 0.5
+      observable_every_ps: 0.5
+      snapshot_every_ps: 1.0
+      stationarity_probe_every_ps: 0.5
+      stationarity_reference_every_ps: 0.5
+      checkpoint_every_ps: 1.0
+
+  report_gaussian:
+    pump:
+      P0: 13.2
+    space:
+      Lx_um: 256.0
+      Ly_um: 256.0
+    time:
+      dt_ps: 0.025
+  report_ring:
+    pump:
+      kind: ring
+      P0: 3.16875
+    space:
+      Lx_um: 256.0
+      Ly_um: 256.0
+    time:
+      t_final_ps: 2000.0
