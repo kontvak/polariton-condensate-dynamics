@@ -29,3 +29,6 @@ latex/*.log
 latex/*.out
 latex/*.synctex.gz
 latex/*.toc
+
+#local
+local/*
